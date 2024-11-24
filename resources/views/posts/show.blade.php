@@ -11,14 +11,6 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <article class="bg-white rounded-lg shadow-lg overflow-hidden tinymce-content">
-        {{-- Featured Image --}}
-        @if($post->featured_image)
-            <div class="w-full h-96 relative">
-                <img 
-                    src="{{ $post->featured_image_url }}" 
-                    alt="{{ $post->title }}" 
-                    class="w-full h-full object-cover"
-                >
                 @auth
                     @can('update', $post)
                         <div class="absolute top-4 right-4 space-x-2">
@@ -31,9 +23,6 @@
                         </div>
                     @endcan
                 @endauth
-            </div>
-        @endif
-
         <div class="p-8">
             {{-- Breadcrumb and Category Info --}}
             @if($post->breadcrumb || $post->categories->isNotEmpty())
@@ -50,27 +39,6 @@
                         @endif
                         <span>{{ $post->breadcrumb }}</span>
                     </nav>
-
-                    {{-- Category Description --}}
-                    @if($post->categories->isNotEmpty() && $post->categories->first()->description)
-                        <div class="mt-4 bg-blue-50 rounded-lg p-4">
-                            <div class="flex">
-                                @if($post->categories->first()->icon)
-                                    <div class="flex-shrink-0">
-                                        <i class="{{ $post->categories->first()->icon }} text-blue-600 text-xl"></i>
-                                    </div>
-                                @endif
-                                <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-blue-800">
-                                        About {{ $post->categories->first()->name }}
-                                    </h3>
-                                    <div class="mt-2 text-sm text-blue-700 prose prose-sm max-w-none">
-                                        {!! $post->categories->first()->description !!}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
                 </div>
             @endif
 
@@ -97,20 +65,6 @@
                     {{ $post->reading_time }} min read
                 </div>
             </div>
-
-            {{-- Categories --}}
-            @if($post->categories->isNotEmpty())
-                <div class="mb-6 flex flex-wrap gap-2">
-                    @foreach($post->categories as $category)
-                        <a 
-                            href="{{ $category->url }}" 
-                            class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200"
-                        >
-                            {{ $category->name }}
-                        </a>
-                    @endforeach
-                </div>
-            @endif
 
             {{-- Video --}}
             @if($post->video_url)
