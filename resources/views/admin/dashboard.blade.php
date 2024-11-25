@@ -41,7 +41,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-sm font-medium text-gray-900">
-                                    <a href="{{ route('posts.show', $post->slug) }}" class="hover:text-blue-600">
+                                    <a href="{{ $post->url }}" class="hover:text-blue-600">
                                         {{ $post->title }}
                                     </a>
                                 </h3>

@@ -42,7 +42,7 @@
                     <ul class="divide-y divide-gray-200">
                         @foreach($posts as $post)
                             <li class="p-4">
-                                <a href="{{ route('posts.show', $post) }}" class="block hover:bg-gray-50">
+                                <a href="{{ $post->url }}" class="block hover:bg-gray-50">
                                     <div class="flex items-center space-x-4">
                                         @if($post->featured_image)
                                             <img src="{{ Storage::url($post->featured_image) }}" 

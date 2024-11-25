@@ -83,7 +83,18 @@ Route::middleware('auth')->group(function () {
    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Dynamic routes last
+// Add these author routes before the dynamic routes
+Route::get('/authors', [AuthorController::class, 'index'])->name('authors.index');
+Route::get('/author/{user}', [AuthorController::class, 'show'])->name('authors.show');
+
+// Author dashboard routes (for authenticated authors)
+Route::middleware('auth')->group(function () {
+    Route::get('/author/dashboard', [AuthorController::class, 'dashboard'])->name('author.dashboard');
+    Route::get('/author/edit', [AuthorController::class, 'edit'])->name('author.edit');
+    Route::patch('/author/update', [AuthorController::class, 'update'])->name('author.update');
+});
+
+// Dynamic routes last (keep these at the bottom)
 Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
 Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
 

@@ -7,7 +7,7 @@
                     About
                 </h3>
                 <p class="mt-4 text-base text-gray-500">
-                    I write about my life here.  
+                    I doodle about my life here.  
                 </p>
             </div>
 

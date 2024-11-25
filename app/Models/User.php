@@ -124,7 +124,7 @@ class User extends Authenticatable
      */
     public function getAuthorUrlAttribute(): string
     {
-        return url("/author/{$this->id}");
+        return route('authors.show', $this);
     }
 
     /**
