@@ -35,7 +35,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse ($posts as $post)
             <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
-                <a href="{{ route('posts.show', $post->slug) }}" class="block">
+                <a href="{{ $post->url }}" class="block">
                     @if($post->featured_image)
                         <img src="{{ $post->featured_image_url }}" 
                              alt="{{ $post->title }}" 

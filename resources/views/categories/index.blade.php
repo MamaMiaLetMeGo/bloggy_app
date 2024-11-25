@@ -8,14 +8,17 @@
 
     <div class="mb-6 flex justify-between items-center">
         <div>
-            <form action="{{ route('categories.search') }}" method="GET" class="flex gap-2">
+            <form action="{{ route('categories.index') }}" method="GET" class="flex gap-2">
                 <input 
                     type="text" 
-                    name="q" 
-                    value="{{ $query ?? '' }}"
+                    name="search" 
+                    value="{{ request('search') }}"
                     placeholder="Search categories..."
                     class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 >
+                @if(request('sort'))
+                    <input type="hidden" name="sort" value="{{ request('sort') }}">
+                @endif
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                     Search
                 </button>
@@ -23,7 +26,7 @@
         </div>
         <div>
             <select 
-                onchange="window.location.href='{{ route('categories.index') }}?sort=' + this.value"
+                onchange="window.location.href='{{ route('categories.index') }}?sort=' + this.value + '{{ request('search') ? '&search=' . request('search') : '' }}'"
                 class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             >
                 <option value="" {{ !request('sort') ? 'selected' : '' }}>Sort by name</option>

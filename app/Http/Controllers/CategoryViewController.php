@@ -8,21 +8,29 @@ use Illuminate\Support\Facades\Storage;
 
 class CategoryViewController extends Controller
 {
-   public function index()
+   public function index(Request $request)
    {
-       $categories = Category::withCount(['posts' => function($query) {
+       $query = Category::withCount(['posts' => function($query) {
                $query->published();
-           }])
-           ->when(request('sort'), function($query) {
-               if (request('sort') === 'posts') {
-                   $query->orderByDesc('posts_count');
-               }
-           }, function($query) {
-               $query->orderBy('name');
-           })
-           ->paginate(12)
-           ->withQueryString();
-       
+           }]);
+
+       // Handle search
+       if ($request->filled('search')) {
+           $query->where(function($q) use ($request) {
+               $q->where('name', 'like', '%' . $request->search . '%')
+                 ->orWhere('description', 'like', '%' . $request->search . '%');
+           });
+       }
+
+       // Handle sorting
+       if ($request->sort === 'posts') {
+           $query->orderByDesc('posts_count');
+       } else {
+           $query->orderBy('name');
+       }
+
+       $categories = $query->paginate(12)->withQueryString();
+
        return view('categories.index', compact('categories'));
    }
 

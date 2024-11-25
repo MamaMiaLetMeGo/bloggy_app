@@ -29,15 +29,15 @@
                 <div class="mb-8">
                     {{-- Breadcrumb --}}
                     <nav class="text-sm text-gray-500 mb-4">
-                        <a href="{{ route('posts.index') }}" class="hover:text-gray-700">Posts</a>
+                        <a href="{{ route('home') }}" class="hover:text-gray-700">Home</a>
                         <span class="mx-2">/</span>
                         @if($post->categories->isNotEmpty())
-                            <a href="{{ route('posts.category', $post->categories->first()) }}" class="hover:text-gray-700">
+                            <a href="{{ $post->categories->first()->url }}" class="hover:text-gray-700">
                                 {{ $post->categories->first()->name }}
                             </a>
                             <span class="mx-2">/</span>
                         @endif
-                        <span>{{ $post->breadcrumb }}</span>
+                        <span>{{ $post->title }}</span>
                     </nav>
                 </div>
             @endif
@@ -108,15 +108,27 @@
                             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
                         </a>
                     </div>
-                    <a 
-                        href="{{ route('posts.index') }}" 
-                        class="inline-flex items-center text-blue-600 hover:text-blue-800"
-                    >
-                        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                        </svg>
-                        Back to Posts
-                    </a>
+                    @if($post->categories->isNotEmpty())
+                        <a 
+                            href="{{ $post->categories->first()->url }}" 
+                            class="inline-flex items-center text-blue-600 hover:text-blue-800"
+                        >
+                            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                            </svg>
+                            Back to {{ $post->categories->first()->name }}
+                        </a>
+                    @else
+                        <a 
+                            href="{{ route('home') }}" 
+                            class="inline-flex items-center text-blue-600 hover:text-blue-800"
+                        >
+                            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                            </svg>
+                            Back to Home
+                        </a>
+                    @endif
                 </div>
             </div>
 

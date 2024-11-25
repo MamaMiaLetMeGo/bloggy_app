@@ -7,7 +7,7 @@
                     About
                 </h3>
                 <p class="mt-4 text-base text-gray-500">
-                    Your blog description here. Share your story and connect with your readers.
+                    I write about my life here.  
                 </p>
             </div>
 
@@ -18,8 +18,13 @@
                 </h3>
                 <ul class="mt-4 space-y-4">
                     <li>
-                        <a href="{{ route('posts.index') }}" class="text-base text-gray-500 hover:text-gray-900">
-                            Posts
+                        <a href="{{ route('home') }}" class="text-base text-gray-500 hover:text-gray-900">
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('categories.index') }}" class="text-base text-gray-500 hover:text-gray-900">
+                            Categories
                         </a>
                     </li>
                     @auth
