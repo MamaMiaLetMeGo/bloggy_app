@@ -120,7 +120,14 @@ class Post extends Model
 
     public function getUrlAttribute(): string
     {
-        return route('posts.show', ['post' => $this->slug]);
+        // Get the first category of the post, or fallback to 'uncategorized'
+        $category = $this->categories->first();
+        $categorySlug = $category ? $category->slug : 'uncategorized';
+        
+        return route('posts.show', [
+            'category' => $categorySlug,
+            'post' => $this->slug
+        ]);
     }
 
     public function getFeaturedImageUrlAttribute(): string

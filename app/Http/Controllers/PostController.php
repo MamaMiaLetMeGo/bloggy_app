@@ -19,22 +19,27 @@ class PostController extends Controller
         return view('posts.index', compact('posts'));
     }
 
-    public function show(Post $post)
+    public function show(Category $category, Post $post)
     {
-        if ($post->status !== 'published' && !auth()->user()?->can('update', $post)) {
+        if (!$post->categories->contains($category)) {
             abort(404);
         }
 
-        $relatedPosts = Post::where('status', 'published')
+        $relatedPosts = Post::with(['author', 'categories'])
+            ->published()
             ->where('id', '!=', $post->id)
-            ->whereHas('categories', function ($query) use ($post) {
-                $query->whereIn('id', $post->categories->pluck('id'));
+            ->whereHas('categories', function ($query) use ($category) {
+                $query->where('categories.id', $category->id);
             })
             ->latest('published_date')
             ->take(3)
             ->get();
 
-        return view('posts.show', compact('post', 'relatedPosts'));
+        return view('posts.show', [
+            'post' => $post->load(['author', 'categories']),
+            'category' => $category,
+            'relatedPosts' => $relatedPosts
+        ]);
     }
 
     public function category(Category $category)

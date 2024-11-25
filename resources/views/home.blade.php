@@ -40,10 +40,9 @@
                     @endif
                     <div class="p-6">
                         <h3 class="text-xl font-semibold text-gray-900 mb-2">
-                            <a href="{{ route('posts.show', $post->slug) }}" 
-                               class="hover:text-blue-600">
-                                {{ $post->title }}
-                            </a>
+                        <a href="{{ $post->url }}" class="hover:text-blue-600">
+                            {{ $post->title }}
+                        </a>
                         </h3>
                         <div class="text-sm text-gray-500 mb-4 flex items-center justify-between">
                             <div class="flex items-center">
