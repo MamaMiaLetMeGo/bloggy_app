@@ -31,7 +31,7 @@ class AuthorController extends Controller
     public function show(User $user): View
     {
         $posts = $user->publishedPosts()
-            ->with('categories')
+            ->with(['categories'])
             ->orderByDesc('published_date')
             ->paginate(10);
 

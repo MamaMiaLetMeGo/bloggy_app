@@ -67,7 +67,7 @@
                                     @foreach($user->posts->take(5) as $post)
                                         <div class="flex items-center justify-between">
                                             <div>
-                                                <a href="{{ route('posts.show', $post) }}" class="text-blue-600 hover:text-blue-800">
+                                                <a href="{{ $post->url }}" class="text-gray-900 hover:text-blue-600">
                                                     {{ $post->title }}
                                                 </a>
                                                 <p class="text-sm text-gray-500">{{ $post->created_at->format('M j, Y') }}</p>

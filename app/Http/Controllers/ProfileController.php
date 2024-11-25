@@ -17,9 +17,13 @@ class ProfileController extends Controller
      */
     public function show(Request $request): View
     {
-        return view('profile.show', [
-            'user' => $request->user(),
-        ]);
+        $user = auth()->user()->load(['posts' => function($query) {
+            $query->with('categories')
+                  ->latest()
+                  ->take(5);
+        }]);
+
+        return view('profile.show', compact('user'));
     }
     /**
      * Display the user's profile form.
