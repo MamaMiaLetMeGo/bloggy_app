@@ -1,5 +1,4 @@
 @extends('layouts.app')
-
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <!-- Category Header -->
@@ -22,7 +21,9 @@
             <h1 class="text-3xl font-bold mb-4">{{ $category->name }}</h1>
             
             @if($category->description)
-                <p class="text-gray-600 mb-4">{{ $category->description }}</p>
+                <div class="tinymce-content text-gray-600 mb-4">
+                    {!! $category->description !!}
+                </div>
             @endif
 
             <div class="text-sm text-gray-500">
