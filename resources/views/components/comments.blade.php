@@ -18,6 +18,7 @@
             class="w-full rounded-lg border-gray-300 shadow-sm"
             rows="3"
             placeholder="Leave a comment..."
+            :disabled="isSubmitting"
         ></textarea>
 
         @guest
@@ -25,20 +26,32 @@
                 <input
                     type="text"
                     x-model="formData.author_name"
-                    class="rounded-lg"
+                    class="rounded-lg border-gray-300"
                     placeholder="Your name"
+                    :disabled="isSubmitting"
                 >
                 <input
                     type="email"
                     x-model="formData.author_email"
-                    class="rounded-lg"
+                    class="rounded-lg border-gray-300"
                     placeholder="Your email"
+                    :disabled="isSubmitting"
                 >
             </div>
         @endguest
 
-        <button type="submit" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg">
-            Submit Comment
+        <!-- Error Messages -->
+        <div x-show="error" class="mt-2 text-red-600 text-sm">
+            <div x-text="error"></div>
+        </div>
+
+        <button 
+            type="submit" 
+            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+            :disabled="isSubmitting"
+        >
+            <span x-show="!isSubmitting">Submit Comment</span>
+            <span x-show="isSubmitting">Submitting...</span>
         </button>
     </form>
 
@@ -53,21 +66,17 @@
                     </div>
                     <button 
                         @click="likeComment(comment)"
-                        class="flex items-center space-x-1 text-gray-500 hover:text-blue-600"
+                        class="flex items-center space-x-1 text-gray-500 hover:text-blue-600 transition-colors duration-200"
+                        :class="{ 'opacity-50': comment.isLiking }"
+                        :disabled="comment.isLiking"
                     >
-                        <span x-text="comment.likes_count"></span>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <span x-text="comment.likes_count || 0" class="mr-1"></span>
+                        <svg class="w-5 h-5" :class="{ 'text-blue-600': comment.liked }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
                         </svg>
                     </button>
                 </div>
                 <p x-text="comment.content" class="mt-2"></p>
-                <button 
-                    @click="showReplyForm(comment.id)"
-                    class="mt-2 text-sm text-blue-600 hover:text-blue-800"
-                >
-                    Reply
-                </button>
             </div>
         </template>
     </div>
@@ -91,8 +100,9 @@ document.addEventListener('alpine:init', () => {
             content: '',
             author_name: '',
             author_email: '',
-            parent_id: null
         },
+        error: null,
+        isSubmitting: false,
         sort: 'newest',
         page: 1,
         hasMorePages: false,
@@ -103,58 +113,112 @@ document.addEventListener('alpine:init', () => {
         },
 
         async loadComments() {
-            const response = await fetch(`/posts/${this.postId}/comments?sort=${this.sort}&page=${this.page}`);
-            const data = await response.json();
-            
-            this.comments = this.page === 1 ? data.data : [...this.comments, ...data.data];
-            this.hasMorePages = data.next_page_url !== null;
+            try {
+                const response = await fetch(`/posts/${this.postId}/comments?page=${this.page}&sort=${this.sort}`);
+                const data = await response.json();
+                
+                if (this.page === 1) {
+                    this.comments = data.data;
+                } else {
+                    this.comments = [...this.comments, ...data.data];
+                }
+                
+                this.hasMorePages = data.current_page < data.last_page;
+            } catch (error) {
+                console.error('Error loading comments:', error);
+            }
+        },
+
+        async loadMore() {
+            this.page++;
+            await this.loadComments();
+        },
+
+        formatDate(date) {
+            return new Date(date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
         },
 
         async submitComment() {
+            if (this.isSubmitting) return;
+            this.error = null;
+            this.isSubmitting = true;
+
             try {
                 const response = await fetch(`/posts/${this.postId}/comments`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(this.formData)
                 });
 
-                if (response.ok) {
-                    this.formData = {
-                        content: '',
-                        author_name: '',
-                        author_email: '',
-                        parent_id: null
-                    };
-                    await this.loadComments();
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to submit comment');
                 }
+
+                // Reset form
+                this.formData = {
+                    content: '',
+                    author_name: '',
+                    author_email: '',
+                };
+
+                // Reset to first page and reload comments
+                this.page = 1;
+                await this.loadComments();
+
             } catch (error) {
+                this.error = error.message;
                 console.error('Error submitting comment:', error);
+            } finally {
+                this.isSubmitting = false;
             }
         },
 
         async likeComment(comment) {
+            if (comment.isLiking) return;
+            
             try {
+                comment.isLiking = true;
+                console.log('Liking comment:', comment.id); // Debug log
+                
                 const response = await fetch(`/comments/${comment.id}/like`, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
                     }
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    comment.likes_count = data.likes_count;
+                console.log('Response status:', response.status); // Debug log
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to like comment');
                 }
+
+                const data = await response.json();
+                console.log('Like response:', data); // Debug log
+                
+                // Update the comment's likes count
+                comment.likes_count = data.likes_count;
+                comment.liked = true;
+
             } catch (error) {
                 console.error('Error liking comment:', error);
+                alert('Failed to like comment. Please try again.');
+            } finally {
+                comment.isLiking = false;
             }
-        },
-
-        formatDate(date) {
-            return new Date(date).toLocaleDateString();
         }
     }));
 });

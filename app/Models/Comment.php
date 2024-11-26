@@ -12,8 +12,21 @@ class Comment extends Model
         'author_name',
         'author_email',
         'post_id',
-        'parent_id'
+        'user_id',
+        'likes_count'
     ];
+
+    protected $casts = [
+        'likes_count' => 'integer',
+    ];
+
+    /**
+     * Get the user that wrote the comment.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * Get the post that owns the comment.
