@@ -89,7 +89,7 @@
                             @enderror
                         </div>
 
-                        {{-- Description --}}
+                        {{-- Description with TinyMCE --}}
                         <div class="sm:col-span-6">
                             <label for="description" class="block text-sm font-medium text-gray-700">
                                 Description
@@ -97,8 +97,7 @@
                             <div class="mt-1">
                                 <textarea name="description" 
                                           id="description" 
-                                          rows="3"
-                                          class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border border-gray-300 rounded-md">{{ old('description', $category->description) }}</textarea>
+                                          rows="3">{{ old('description', $category->description) }}</textarea>
                             </div>
                             <p class="mt-2 text-sm text-gray-500">Brief description of the category.</p>
                             @error('description')
@@ -443,5 +442,55 @@
             }
         });
     }
+</script>
+<script src="https://cdn.tiny.cloud/1/ohrfrapuhu20w9tbmhnitg6kvecj2vouenborprjzguexqop/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+    // TinyMCE initialization
+    tinymce.init({
+        selector: 'textarea#description',
+        height: 300,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | ' +
+            'bold italic backcolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'removeformat | image | help',
+        automatic_uploads: true,
+        images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/admin/categories/upload-image');
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            xhr.setRequestHeader('X-CSRF-Token', token);
+            
+            xhr.upload.onprogress = (e) => {
+                progress((e.loaded / e.total) * 100);
+            };
+            
+            xhr.onload = () => {
+                if (xhr.status !== 200) {
+                    reject({ message: `HTTP Error: ${xhr.status}`, remove: true });
+                    return;
+                }
+                const json = JSON.parse(xhr.responseText);
+                if (!json || typeof json.location !== 'string') {
+                    reject('Invalid JSON response: ' + xhr.responseText);
+                    return;
+                }
+                resolve(json.location);
+            };
+            
+            xhr.onerror = () => {
+                reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+            };
+            
+            const formData = new FormData();
+            formData.append('file', blobInfo.blob(), blobInfo.filename());
+            xhr.send(formData);
+        }),
+        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }'
+    });
 </script>
 @endpush

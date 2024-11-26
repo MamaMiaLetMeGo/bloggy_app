@@ -7,7 +7,7 @@
                     About
                 </h3>
                 <p class="mt-4 text-base text-gray-500">
-                    I doodle about my life here.  
+                    Writing feels good.  
                 </p>
             </div>
 
@@ -44,8 +44,8 @@
                 </h3>
                 <ul class="mt-4 space-y-4">
                     <li>
-                        <a href="#" class="text-base text-gray-500 hover:text-gray-900">
-                            Contact Us
+                        <a href="{{ route('contact.show') }}" class="text-base text-gray-500 hover:text-gray-900">
+                            Contact Me
                         </a>
                     </li>
                     <li>
