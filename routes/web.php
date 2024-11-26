@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\Admin\CommentController as AdminCommentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -97,6 +99,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/author/dashboard', [AuthorController::class, 'dashboard'])->name('author.dashboard');
     Route::get('/author/edit', [AuthorController::class, 'edit'])->name('author.edit');
     Route::patch('/author/update', [AuthorController::class, 'update'])->name('author.update');
+});
+
+Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
+    ->name('comments.store')
+    ->middleware('throttle:60,1'); // Rate limiting
+
+Route::get('/posts/{post}/comments', [CommentController::class, 'index'])
+    ->name('comments.index');
+
+Route::post('/comments/{comment}/like', [CommentController::class, 'like'])
+    ->name('comments.like')
+    ->middleware('throttle:60,1');
+
+// Admin comment management
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
+    Route::patch('/comments/{comment}/approve', [AdminCommentController::class, 'approve'])->name('comments.approve');
+    Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
 });
 
 // Dynamic routes last (keep these at the bottom)

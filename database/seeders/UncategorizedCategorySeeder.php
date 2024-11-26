@@ -1,13 +1,16 @@
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+
 use App\Models\Category;
 
-class AddUncategorizedCategory extends Migration
+class UncategorizedCategorySeeder extends Seeder
 {
-    public function up()
+    public function run()
     {
-        // Create an uncategorized category if it doesn't exist
         if (!Category::where('slug', 'uncategorized')->exists()) {
             Category::create([
                 'name' => 'Uncategorized',
@@ -16,9 +19,4 @@ class AddUncategorizedCategory extends Migration
             ]);
         }
     }
-
-    public function down()
-    {
-        //
-    }
-} 
+}
