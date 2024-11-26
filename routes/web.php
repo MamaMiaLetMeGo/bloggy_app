@@ -68,6 +68,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
    // Category Management
    Route::resource('categories', AdminCategoryController::class);
+   Route::post('/categories/upload-image', [AdminCategoryController::class, 'uploadImages'])->name('categories.image.upload');
    
    // Post Status Management
    Route::post('/posts/{post}/publish', [AdminPostController::class, 'publish'])->name('posts.publish');
