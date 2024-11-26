@@ -52,17 +52,26 @@ class CategoryController extends Controller
      */
     public function store(CategoryStoreRequest $request)
     {
-        $data = $request->validated();
+        try {
+            $validated = $request->validated();
+            
+            // Handle image upload if present
+            if ($request->hasFile('image')) {
+                $validated['image'] = $this->handleImageUpload($request->file('image'));
+            }
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $this->handleImageUpload($request->file('image'));
+            $category = Category::create($validated);
+
+            return redirect()
+                ->route('admin.categories.index')
+                ->with('success', 'Category created successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Error creating category: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->with('error', 'An error occurred while creating the category');
         }
-
-        $category = Category::create($data);
-
-        return redirect()
-            ->route('admin.categories.index')
-            ->with('success', 'Category created successfully');
     }
 
     /**
@@ -236,5 +245,17 @@ class CategoryController extends Controller
         }
 
         return back()->with('success', $message);
+    }
+
+    public function uploadImages(Request $request)
+    {
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $path = $file->store('uploads', 'public');
+            return response()->json([
+                'location' => asset('storage/' . $path)
+            ]);
+        }
+        return response()->json(['error' => 'No file uploaded'], 400);
     }
 }

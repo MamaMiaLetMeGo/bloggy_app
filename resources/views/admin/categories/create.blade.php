@@ -5,8 +5,7 @@
     <div class="max-w-3xl mx-auto">
         <div class="md:flex md:items-center md:justify-between md:space-x-4 xl:border-b xl:pb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Create Category</h1>
-                <p class="mt-2 text-sm text-gray-700">Add a new category to organize your blog posts.</p>
+                <h1 class="text-2xl font-bold text-gray-900">Create New Category</h1>
             </div>
         </div>
 
@@ -34,6 +33,25 @@
                             @enderror
                         </div>
 
+                        {{-- Slug --}}
+                        <div class="sm:col-span-4">
+                            <label for="slug" class="block text-sm font-medium text-gray-700">
+                                Slug
+                            </label>
+                            <div class="mt-1">
+                                <input type="text" 
+                                       name="slug" 
+                                       id="slug" 
+                                       value="{{ old('slug') }}"
+                                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md bg-gray-50" 
+                                       readonly>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-500">URL-friendly version of the name. This is auto-generated.</p>
+                            @error('slug')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         {{-- Color --}}
                         <div class="sm:col-span-2">
                             <label for="color" class="block text-sm font-medium text-gray-700">
@@ -43,7 +61,7 @@
                                 <input type="color" 
                                        name="color" 
                                        id="color" 
-                                       value="{{ old('color', '#3B82F6') }}"
+                                       value="{{ old('color', '#000000') }}"
                                        class="h-9 p-0 block w-full border-gray-300 rounded-md">
                             </div>
                             @error('color')
@@ -51,18 +69,15 @@
                             @enderror
                         </div>
 
-                        {{-- Description --}}
+                        {{-- Description with TinyMCE --}}
                         <div class="sm:col-span-6">
                             <label for="description" class="block text-sm font-medium text-gray-700">
                                 Description
                             </label>
                             <div class="mt-1">
-                                <input id="description" type="hidden" name="description" value="{{ old('description') }}">
-                                <trix-editor 
-                                    input="description"
-                                    class="trix-content prose max-w-full block w-full border-gray-300 rounded-md shadow-sm"
-                                    style="min-height: 15rem;">
-                                </trix-editor>
+                                <textarea name="description" 
+                                          id="description" 
+                                          rows="3">{{ old('description') }}</textarea>
                             </div>
                             <p class="mt-2 text-sm text-gray-500">Brief description of the category.</p>
                             @error('description')
@@ -80,7 +95,7 @@
                                         id="icon" 
                                         class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                     <option value="">Select an icon</option>
-                                    @foreach($icons ?? [] as $value => $label)
+                                    @foreach($icons as $value => $label)
                                         <option value="{{ $value }}" {{ old('icon') === $value ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
@@ -94,100 +109,67 @@
 
                         {{-- Image Upload --}}
                         <div class="sm:col-span-6">
-                            <label class="block text-sm font-medium text-gray-700">Category Image</label>
-                            <div id="dropZone" class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-400 transition-colors">
+                            <label class="block text-sm font-medium text-gray-700">
+                                Category Image
+                            </label>
+                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md relative" id="dropZone">
                                 <div class="space-y-1 text-center">
-                                    <div class="flex flex-col items-center">
-                                        <img id="imagePreview" class="h-32 w-32 object-cover rounded-lg mb-4 hidden">
-                                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                        <div class="flex text-sm text-gray-600">
-                                            <label for="image" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
-                                                <span>Upload a file</span>
-                                                <input id="image" name="image" type="file" class="sr-only" accept="image/*">
-                                            </label>
-                                            <p class="pl-1">or drag and drop</p>
-                                        </div>
-                                        <p class="text-xs text-gray-500">PNG, JPG, WEBP up to 2MB</p>
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div class="flex text-sm text-gray-600">
+                                        <label for="image" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                            <span>Upload a file</span>
+                                            <input id="image" name="image" type="file" class="sr-only" accept="image/*">
+                                        </label>
+                                        <p class="pl-1">or drag and drop</p>
                                     </div>
+                                    <p class="text-xs text-gray-500">
+                                        PNG, JPG, GIF up to 2MB
+                                    </p>
                                 </div>
+                                <img id="imagePreview" class="absolute inset-0 w-full h-full object-cover rounded-md hidden">
                             </div>
                             @error('image')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
-                            @if(session('image_error'))
-                                <p class="mt-2 text-sm text-red-600">{{ session('image_error') }}</p>
-                            @endif
                         </div>
 
-                        {{-- Featured Toggle --}}
-                        <div class="sm:col-span-6">
-                            <div class="flex items-start">
-                                <div class="flex items-center h-5">
-                                    <input type="checkbox" 
-                                           name="is_featured" 
-                                           id="is_featured" 
-                                           value="1"
-                                           {{ old('is_featured') ? 'checked' : '' }}
-                                           class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
-                                </div>
-                                <div class="ml-3 text-sm">
-                                    <label for="is_featured" class="font-medium text-gray-700">Feature this category</label>
-                                    <p class="text-gray-500">Featured categories are highlighted on the blog homepage.</p>
-                                </div>
+                        {{-- Meta Title --}}
+                        <div class="sm:col-span-4">
+                            <label for="meta_title" class="block text-sm font-medium text-gray-700">
+                                Meta Title
+                            </label>
+                            <div class="mt-1">
+                                <input type="text" 
+                                       name="meta_title" 
+                                       id="meta_title" 
+                                       maxlength="60"
+                                       value="{{ old('meta_title') }}"
+                                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                             </div>
-                            @error('is_featured')
+                            <p class="mt-2 text-sm text-gray-500">60 characters remaining.</p>
+                            @error('meta_title')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        {{-- SEO Section --}}
+                        {{-- Meta Description --}}
                         <div class="sm:col-span-6">
-                            <div class="bg-gray-50 px-4 py-5 sm:rounded-lg sm:p-6">
-                                <div class="md:grid md:grid-cols-3 md:gap-6">
-                                    <div class="md:col-span-1">
-                                        <h3 class="text-lg font-medium leading-6 text-gray-900">SEO</h3>
-                                        <p class="mt-1 text-sm text-gray-500">Search engine optimization settings.</p>
-                                    </div>
-                                    <div class="mt-5 space-y-6 md:mt-0 md:col-span-2">
-                                        <div>
-                                            <label for="meta_title" class="block text-sm font-medium text-gray-700">
-                                                Meta Title
-                                            </label>
-                                            <div class="mt-1">
-                                                <input type="text" 
-                                                       name="meta_title" 
-                                                       id="meta_title" 
-                                                       value="{{ old('meta_title') }}"
-                                                       maxlength="60"
-                                                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                            </div>
-                                            <p class="mt-2 text-sm text-gray-500">Maximum 60 characters.</p>
-                                            @error('meta_title')
-                                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-
-                                        <div>
-                                            <label for="meta_description" class="block text-sm font-medium text-gray-700">
-                                                Meta Description
-                                            </label>
-                                            <div class="mt-1">
-                                                <textarea name="meta_description" 
-                                                          id="meta_description" 
-                                                          rows="3"
-                                                          maxlength="160"
-                                                          class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border border-gray-300 rounded-md">{{ old('meta_description') }}</textarea>
-                                            </div>
-                                            <p class="mt-2 text-sm text-gray-500">Maximum 160 characters.</p>
-                                            @error('meta_description')
-                                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                </div>
+                            <label for="meta_description" class="block text-sm font-medium text-gray-700">
+                                Meta Description
+                            </label>
+                            <div class="mt-1">
+                                <textarea name="meta_description" 
+                                          id="meta_description" 
+                                          rows="3"
+                                          maxlength="160"
+                                          class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">{{ old('meta_description') }}</textarea>
                             </div>
+                            <p class="mt-2 text-sm text-gray-500">Maximum 160 characters.</p>
+                            @error('meta_description')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
                 </div>
@@ -211,7 +193,57 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.tiny.cloud/1/ohrfrapuhu20w9tbmhnitg6kvecj2vouenborprjzguexqop/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
+    // TinyMCE initialization
+    tinymce.init({
+        selector: 'textarea#description',
+        height: 300,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | ' +
+            'bold italic backcolor | alignleft aligncenter ' +
+            'alignright alignjustify | bullist numlist outdent indent | ' +
+            'removeformat | image | help',
+        automatic_uploads: true,
+        images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/admin/categories/upload-image');
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            xhr.setRequestHeader('X-CSRF-Token', token);
+            
+            xhr.upload.onprogress = (e) => {
+                progress((e.loaded / e.total) * 100);
+            };
+            
+            xhr.onload = () => {
+                if (xhr.status !== 200) {
+                    reject({ message: `HTTP Error: ${xhr.status}`, remove: true });
+                    return;
+                }
+                const json = JSON.parse(xhr.responseText);
+                if (!json || typeof json.location !== 'string') {
+                    reject('Invalid JSON response: ' + xhr.responseText);
+                    return;
+                }
+                resolve(json.location);
+            };
+            
+            xhr.onerror = () => {
+                reject('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
+            };
+            
+            const formData = new FormData();
+            formData.append('file', blobInfo.blob(), blobInfo.filename());
+            xhr.send(formData);
+        }),
+        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px }'
+    });
+
+    // Existing image upload and slug generation scripts
     // Constants for image validation
     const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
     const MIN_WIDTH = 200;
@@ -246,86 +278,50 @@
         }
     });
 
-    // Loading state elements
-    const loadingOverlay = document.createElement('div');
-    loadingOverlay.className = 'fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50';
-    loadingOverlay.innerHTML = `
-        <div class="bg-white rounded-lg px-4 py-3 shadow-xl">
-            <div class="flex items-center space-x-3">
-                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <p class="text-gray-700">Processing image...</p>
-            </div>
-        </div>
-    `;
-
-    // Error toast notification
-    function showError(message) {
-        const toast = document.createElement('div');
-        toast.className = 'fixed bottom-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg z-50';
-        toast.innerHTML = `
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm">${message}</p>
-                </div>
-                <button onclick="this.parentElement.remove()" class="ml-auto pl-3">
-                    <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                    </svg>
-                </button>
-            </div>
-        `;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 5000);
-    }
-
-    // Image validation function
+    // Image validation and preview functions
     async function validateImage(file) {
+        if (file.size > MAX_FILE_SIZE) {
+            throw new Error('File size must be less than 2MB');
+        }
+
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.src = URL.createObjectURL(file);
-            
             img.onload = function() {
                 URL.revokeObjectURL(img.src);
-                const width = img.naturalWidth;
-                const height = img.naturalHeight;
-                
-                if (width < MIN_WIDTH || height < MIN_HEIGHT) {
-                    reject(`Image must be at least ${MIN_WIDTH}x${MIN_HEIGHT}px`);
-                } else if (width > MAX_WIDTH || height > MAX_HEIGHT) {
-                    reject(`Image must be no larger than ${MAX_WIDTH}x${MAX_HEIGHT}px`);
+                if (img.width < MIN_WIDTH || img.height < MIN_HEIGHT) {
+                    reject(new Error(`Image dimensions must be at least ${MIN_WIDTH}x${MIN_HEIGHT}px`));
+                } else if (img.width > MAX_WIDTH || img.height > MAX_HEIGHT) {
+                    reject(new Error(`Image dimensions must not exceed ${MAX_WIDTH}x${MAX_HEIGHT}px`));
                 } else {
                     resolve();
                 }
             };
-            
-            img.onerror = () => reject('Invalid image file');
+            img.onerror = () => reject(new Error('Invalid image file'));
         });
     }
 
-    // Handle file processing
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'mt-2 text-sm text-red-600';
+        errorDiv.textContent = message;
+        const dropZone = document.getElementById('dropZone');
+        dropZone.parentNode.appendChild(errorDiv);
+        setTimeout(() => errorDiv.remove(), 3000);
+    }
+
     async function processFile(file) {
-        if (!file) return;
+        if (!file || !file.type.startsWith('image/')) {
+            showError('Please upload an image file');
+            return;
+        }
+
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.className = 'absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center';
+        loadingOverlay.innerHTML = '<div class="text-blue-600">Processing...</div>';
+        document.getElementById('dropZone').appendChild(loadingOverlay);
 
         try {
-            // Show loading state
-            document.body.appendChild(loadingOverlay);
-
-            // Validate file size
-            if (file.size > MAX_FILE_SIZE) {
-                throw new Error('File is too large. Maximum size is 2MB.');
-            }
-
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                throw new Error('Please upload an image file.');
-            }
-
-            // Validate dimensions
             await validateImage(file);
 
             // Preview image
@@ -334,6 +330,7 @@
                 const preview = document.getElementById('imagePreview');
                 preview.src = e.target.result;
                 preview.classList.remove('hidden');
+                document.querySelector('#dropZone svg').classList.add('hidden');
             };
             reader.readAsDataURL(file);
 
@@ -341,10 +338,7 @@
             showError(error.message);
             const input = document.getElementById('image');
             input.value = ''; // Clear the input
-            const preview = document.getElementById('imagePreview');
-            preview.classList.add('hidden');
         } finally {
-            // Remove loading state
             loadingOverlay.remove();
         }
     }
@@ -396,57 +390,5 @@
             }
         });
     }
-
-    // Prevent file uploads through Trix (if you don't want them)
-    document.addEventListener('trix-file-accept', function(e) {
-        e.preventDefault();
-    });
-    
-    // Custom attachment behavior (if you want to handle uploads)
-    document.addEventListener('trix-attachment-add', function(e) {
-        // Handle file upload here if needed
-    });
-    
-    // Initialize Trix with any custom configurations
-    document.addEventListener('trix-initialize', function(e) {
-        // Any initialization code
-    });
 </script>
-@endpush
-
-@push('styles')
-<style>
-    trix-editor {
-        @apply block w-full rounded-md border-gray-300;
-        min-height: 15rem;
-    }
-    
-    trix-toolbar {
-        @apply border border-gray-300 rounded-t-md bg-gray-50 p-2;
-    }
-    
-    trix-toolbar .trix-button-group {
-        @apply mr-2;
-    }
-    
-    trix-toolbar .trix-button {
-        @apply border border-gray-300 rounded p-1 bg-white hover:bg-gray-100;
-    }
-    
-    trix-toolbar .trix-button.trix-active {
-        @apply bg-blue-50 border-blue-500;
-    }
-    
-    .trix-content {
-        @apply prose max-w-none;
-    }
-    
-    .trix-content ul {
-        @apply list-disc pl-4;
-    }
-    
-    .trix-content ol {
-        @apply list-decimal pl-4;
-    }
-</style>
-@endpush
+@endpush 

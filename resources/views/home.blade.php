@@ -2,21 +2,29 @@
 
 @section('content')
 <div class="bg-gradient-to-b from-gray-50 to-white min-h-screen">
-    <!-- Hero Section with Animated Gradient -->
+    <!-- Hero Section with Background Image and Gradient Overlay -->
     <div class="relative overflow-hidden bg-white">
-        <div class="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 animate-gradient"></div>
+        <!-- Background Image -->
+        <div class="absolute inset-0">
+            <img src="{{ asset('images/hero-bg.jpg') }}" 
+                 alt="Background" 
+                 class="w-full h-full object-cover"
+            >
+            <!-- Gradient Overlay -->
+            <div class="absolute inset-0 bg-gradient-to-r from-gray-900/80 to-gray-800/80 animate-gradient mix-blend-multiply"></div>
+            <div class="absolute inset-0 bg-blue-950/20"></div>
+        </div>
+
+        <!-- Content -->
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
             <div class="text-center">
-                <h1 class="text-5xl font-bold text-gray-900 sm:text-6xl md:text-7xl tracking-tight">
-                    Hi, how are you?
-                </h1>
-                <p class="mt-6 max-w-md mx-auto text-xl text-gray-600 sm:max-w-3xl">
-                    It just feels good to write.
+                <p class="mt-6 max-w-md mx-auto text-xl text-gray-200 sm:max-w-3xl">
+                    Writing feels good.
                 </p>
                 @auth
                     <div class="mt-8">
                         <a href="{{ route('admin.posts.create') }}" 
-                           class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-300"
+                           class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-blue-600/90 hover:bg-blue-700 transition-colors duration-300"
                         >
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -118,7 +126,12 @@
     }
     
     .animate-gradient {
-        background: linear-gradient(-45deg, #EEF2FF, #E0E7FF, #DBEAFE, #EFF6FF);
+        background: linear-gradient(-45deg, 
+            rgba(17, 24, 39, 0.8), /* gray-900 */
+            rgba(31, 41, 55, 0.8), /* gray-800 */
+            rgba(17, 24, 39, 0.8), /* gray-900 */
+            rgba(31, 41, 55, 0.8)  /* gray-800 */
+        );
         background-size: 400% 400%;
         animation: gradient 15s ease infinite;
     }

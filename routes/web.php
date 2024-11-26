@@ -11,6 +11,7 @@ use App\Models\Post;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\AuthorController;
+use App\Http\Controllers\ContactController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,6 +29,9 @@ Route::get('/', function () {
 
    return view('home', compact('posts'));
 })->name('home');
+
+Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
+Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
 // Auth routes
 Route::middleware('guest')->group(function () {
@@ -64,6 +68,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
    // Category Management
    Route::resource('categories', AdminCategoryController::class);
+   Route::post('/categories/upload-image', [AdminCategoryController::class, 'uploadImages'])->name('categories.image.upload');
    
    // Post Status Management
    Route::post('/posts/{post}/publish', [AdminPostController::class, 'publish'])->name('posts.publish');
