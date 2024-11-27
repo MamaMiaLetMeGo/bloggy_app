@@ -112,6 +112,9 @@ Route::post('/comments/{comment}/like', [CommentController::class, 'like'])
     ->name('comments.like')
     ->middleware('throttle:60,1');
 
+Route::get('/posts/{post}/commenters', [CommentController::class, 'commenters'])
+->name('posts.commenters');
+
 // Admin comment management
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
