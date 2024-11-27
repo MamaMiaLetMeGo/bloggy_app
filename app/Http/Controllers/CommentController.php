@@ -61,7 +61,7 @@ class CommentController extends Controller
     public function index(Request $request, Post $post)
     {
         $sort = $request->input('sort', 'newest');
-        $query = $post->comments()->whereNull('parent_id'); // Get only parent comments
+        $query = $post->comments()->whereNull('parent_id'); // Get only top-level comments
 
         switch ($sort) {
             case 'oldest':
@@ -75,10 +75,8 @@ class CommentController extends Controller
                 break;
         }
 
-        // Load replies for each comment
-        $comments = $query->with(['replies' => function($query) {
-            $query->orderBy('created_at', 'asc');
-        }, 'user'])->paginate(10);
+        // Load nested replies recursively
+        $comments = $query->with(['replies.replies', 'user'])->paginate(10);
 
         return response()->json($comments);
     }
