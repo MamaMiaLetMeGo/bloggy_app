@@ -11,14 +11,15 @@
         </select>
     </div>
     
-    {{-- Comment Form --}}
-    <form @submit.prevent="submitComment" class="mb-8">
+    {{-- Main Comment Form --}}
+    <form @submit.prevent="submitComment" x-show="!replyingTo" class="mb-8">
         <textarea
             x-model="formData.content"
             class="w-full rounded-lg border-gray-300 shadow-sm"
             rows="3"
             placeholder="Leave a comment..."
             :disabled="isSubmitting"
+            @mention="handleMention"
         ></textarea>
 
         @guest
@@ -40,10 +41,7 @@
             </div>
         @endguest
 
-        <!-- Error Messages -->
-        <div x-show="error" class="mt-2 text-red-600 text-sm">
-            <div x-text="error"></div>
-        </div>
+        <div x-show="error" x-text="error" class="mt-2 text-red-600 text-sm"></div>
 
         <button 
             type="submit" 
@@ -51,6 +49,54 @@
             :disabled="isSubmitting"
         >
             <span x-show="!isSubmitting">Submit Comment</span>
+            <span x-show="isSubmitting">Submitting...</span>
+        </button>
+    </form>
+
+    {{-- Reply Form --}}
+    <form @submit.prevent="submitReply" x-show="replyingTo" class="mb-8">
+        <div class="flex items-center text-sm text-gray-500 mb-2">
+            <span>Replying to <span x-text="replyingTo ? replyingTo.author_name : ''"></span></span>
+            <button @click="cancelReply" class="ml-2 text-gray-400 hover:text-gray-600">
+                Cancel
+            </button>
+        </div>
+        <textarea
+            x-model="formData.content"
+            class="w-full rounded-lg border-gray-300 shadow-sm"
+            rows="3"
+            placeholder="Write your reply..."
+            :disabled="isSubmitting"
+            @mention="handleMention"
+        ></textarea>
+
+        @guest
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <input
+                    type="text"
+                    x-model="formData.author_name"
+                    class="rounded-lg border-gray-300"
+                    placeholder="Your name"
+                    :disabled="isSubmitting"
+                >
+                <input
+                    type="email"
+                    x-model="formData.author_email"
+                    class="rounded-lg border-gray-300"
+                    placeholder="Your email"
+                    :disabled="isSubmitting"
+                >
+            </div>
+        @endguest
+
+        <div x-show="error" x-text="error" class="mt-2 text-red-600 text-sm"></div>
+
+        <button 
+            type="submit" 
+            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+            :disabled="isSubmitting"
+        >
+            <span x-show="!isSubmitting">Submit Reply</span>
             <span x-show="isSubmitting">Submitting...</span>
         </button>
     </form>
@@ -64,31 +110,56 @@
                         <h5 x-text="comment.author_name" class="font-medium"></h5>
                         <p class="text-sm text-gray-500" x-text="formatDate(comment.created_at)"></p>
                     </div>
-                    <button 
-                        @click="likeComment(comment)"
-                        class="flex items-center space-x-1 text-gray-500 hover:text-blue-600 transition-colors duration-200"
-                        :class="{ 'opacity-50': comment.isLiking }"
-                        :disabled="comment.isLiking"
-                    >
-                        <span x-text="comment.likes_count || 0" class="mr-1"></span>
-                        <svg class="w-5 h-5" :class="{ 'text-blue-600': comment.liked }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
-                        </svg>
-                    </button>
+                    <div class="flex items-center space-x-4">
+                        <button 
+                            @click="likeComment(comment)"
+                            class="flex items-center space-x-1 text-gray-500 hover:text-blue-600"
+                            :class="{ 'text-blue-600': comment.liked }"
+                        >
+                            <span x-text="comment.likes_count || 0"></span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+                            </svg>
+                        </button>
+                        <button 
+                            @click="startReply(comment)"
+                            class="text-gray-500 hover:text-blue-600 text-sm"
+                        >
+                            Reply
+                        </button>
+                    </div>
                 </div>
                 <p x-text="comment.content" class="mt-2"></p>
+
+                {{-- Nested Replies --}}
+                <template x-if="comment.replies && comment.replies.length > 0">
+                    <div class="mt-4 ml-6 space-y-4">
+                        <template x-for="reply in comment.replies" :key="reply.id">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="flex justify-between">
+                                    <div>
+                                        <h6 x-text="reply.author_name" class="font-medium"></h6>
+                                        <p class="text-sm text-gray-500" x-text="formatDate(reply.created_at)"></p>
+                                    </div>
+                                    <button 
+                                        @click="likeComment(reply)"
+                                        class="flex items-center space-x-1 text-gray-500 hover:text-blue-600"
+                                        :class="{ 'text-blue-600': reply.liked }"
+                                    >
+                                        <span x-text="reply.likes_count || 0"></span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p x-text="reply.content" class="mt-2"></p>
+                            </div>
+                        </template>
+                    </div>
+                </template>
             </div>
         </template>
     </div>
-
-    {{-- Load More --}}
-    <button 
-        x-show="hasMorePages"
-        @click="loadMore"
-        class="mt-4 w-full py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-    >
-        Load More Comments
-    </button>
 </div>
 
 @push('scripts')
@@ -100,6 +171,7 @@ document.addEventListener('alpine:init', () => {
             content: '',
             author_name: '',
             author_email: '',
+            parent_id: null
         },
         error: null,
         isSubmitting: false,
@@ -107,9 +179,50 @@ document.addEventListener('alpine:init', () => {
         page: 1,
         hasMorePages: false,
         postId: {{ $postId }},
+        replyingTo: null,
+        mentions: [],
 
         async init() {
             await this.loadComments();
+            this.setupMentions();
+        },
+
+        setupMentions() {
+            const textarea = this.$el.querySelector('textarea');
+            let mentionSearch = '';
+            
+            textarea.addEventListener('input', (e) => {
+                const pos = e.target.selectionStart;
+                const content = e.target.value;
+                
+                if (content[pos - 1] === '@') {
+                    this.showMentionSuggestions();
+                }
+            });
+        },
+
+        async showMentionSuggestions() {
+            // Fetch users who have commented on this post
+            const response = await fetch(`/posts/${this.postId}/commenters`);
+            const users = await response.json();
+            this.mentions = users;
+        },
+
+        handleMention(user) {
+            this.formData.content += `@${user.name} `;
+            this.mentions = [];
+        },
+
+        startReply(comment) {
+            this.replyingTo = comment;
+            this.formData.parent_id = comment.id;
+            this.formData.content = `@${comment.author_name} `;
+        },
+
+        cancelReply() {
+            this.replyingTo = null;
+            this.formData.parent_id = null;
+            this.formData.content = '';
         },
 
         async loadComments() {
