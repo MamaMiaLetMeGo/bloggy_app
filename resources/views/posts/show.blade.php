@@ -10,6 +10,7 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    {{-- Main content and sidebar --}}
     <div class="flex flex-col lg:flex-row lg:space-x-8">
         <!-- Main Content -->
         <article class="lg:w-3/4 bg-white rounded-lg shadow-lg overflow-hidden tinymce-content">
@@ -187,9 +188,19 @@
         </div>
     </div>
 
-    <!-- Related Posts -->
-    @if($relatedPosts->isNotEmpty())
+    {{-- Comments Section - Same width as main content --}}
+    <div class="lg:w-3/4">
         <div class="mt-12">
+            <x-comments 
+                :postId="$post->id"
+                :commentsCount="$post->comments()->count()"
+            />
+        </div>
+    </div>
+
+    {{-- Related Posts Section - Same width as main content --}}
+    @if($relatedPosts->isNotEmpty())
+        <div class="lg:w-3/4 mt-12">
             <h2 class="text-2xl font-bold text-gray-900 mb-6">Related Posts</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($relatedPosts as $relatedPost)
