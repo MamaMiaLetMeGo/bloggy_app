@@ -12,7 +12,7 @@
     </div>
     
     {{-- Main Comment Form --}}
-    <form @submit.prevent="submitComment" x-show="!replyingTo" class="mb-8">
+    <form @submit.prevent="submitComment" class="mb-8">
         <textarea
             x-model="formData.content"
             class="w-full rounded-lg border-gray-300 shadow-sm"
@@ -53,54 +53,6 @@
         </button>
     </form>
 
-    {{-- Reply Form --}}
-    <form @submit.prevent="submitReply" x-show="replyingTo" class="mb-8">
-        <div class="flex items-center text-sm text-gray-500 mb-2">
-            <span>Replying to <span x-text="replyingTo ? replyingTo.author_name : ''"></span></span>
-            <button @click="cancelReply" class="ml-2 text-gray-400 hover:text-gray-600">
-                Cancel
-            </button>
-        </div>
-        <textarea
-            x-model="formData.content"
-            class="w-full rounded-lg border-gray-300 shadow-sm"
-            rows="3"
-            placeholder="Write your reply..."
-            :disabled="isSubmitting"
-            @mention="handleMention"
-        ></textarea>
-
-        @guest
-            <div class="grid grid-cols-2 gap-4 mt-4">
-                <input
-                    type="text"
-                    x-model="formData.author_name"
-                    class="rounded-lg border-gray-300"
-                    placeholder="Your name"
-                    :disabled="isSubmitting"
-                >
-                <input
-                    type="email"
-                    x-model="formData.author_email"
-                    class="rounded-lg border-gray-300"
-                    placeholder="Your email"
-                    :disabled="isSubmitting"
-                >
-            </div>
-        @endguest
-
-        <div x-show="error" x-text="error" class="mt-2 text-red-600 text-sm"></div>
-
-        <button 
-            type="submit" 
-            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
-            :disabled="isSubmitting"
-        >
-            <span x-show="!isSubmitting">Submit Reply</span>
-            <span x-show="isSubmitting">Submitting...</span>
-        </button>
-    </form>
-
     {{-- Comments List --}}
     <div class="space-y-6">
         <template x-for="comment in comments" :key="comment.id">
@@ -130,6 +82,57 @@
                     </div>
                 </div>
                 <p x-text="comment.content" class="mt-2"></p>
+
+                {{-- Reply Form --}}
+                <div x-show="replyingTo === comment.id" class="mt-4">
+                    <form @submit.prevent="submitReply(comment)">
+                        <textarea
+                            x-model="formData.content"
+                            class="w-full rounded-lg border-gray-300 shadow-sm"
+                            rows="3"
+                            placeholder="Write your reply..."
+                            :disabled="isSubmitting"
+                            @mention="handleMention"
+                        ></textarea>
+
+                        @guest
+                            <div class="grid grid-cols-2 gap-4 mt-4">
+                                <input
+                                    type="text"
+                                    x-model="formData.author_name"
+                                    class="rounded-lg border-gray-300"
+                                    placeholder="Your name"
+                                    :disabled="isSubmitting"
+                                >
+                                <input
+                                    type="email"
+                                    x-model="formData.author_email"
+                                    class="rounded-lg border-gray-300"
+                                    placeholder="Your email"
+                                    :disabled="isSubmitting"
+                                >
+                            </div>
+                        @endguest
+
+                        <div class="mt-2 space-x-2">
+                            <button 
+                                type="submit" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+                                :disabled="isSubmitting"
+                            >
+                                <span x-show="!isSubmitting">Submit Reply</span>
+                                <span x-show="isSubmitting">Submitting...</span>
+                            </button>
+                            <button 
+                                @click="cancelReply" 
+                                type="button"
+                                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
 
                 {{-- Nested Replies --}}
                 <template x-if="comment.replies && comment.replies.length > 0">
@@ -214,7 +217,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         startReply(comment) {
-            this.replyingTo = comment;
+            this.replyingTo = comment.id;
             this.formData.parent_id = comment.id;
             this.formData.content = `@${comment.author_name} `;
         },
@@ -291,6 +294,52 @@ document.addEventListener('alpine:init', () => {
             } catch (error) {
                 this.error = error.message;
                 console.error('Error submitting comment:', error);
+            } finally {
+                this.isSubmitting = false;
+            }
+        },
+
+        async submitReply(parentComment) {
+            if (this.isSubmitting) return;
+            this.error = null;
+            this.isSubmitting = true;
+
+            try {
+                const response = await fetch(`/posts/${this.postId}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(this.formData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to submit reply');
+                }
+
+                // Add the new reply to the parent comment's replies
+                if (!parentComment.replies) {
+                    parentComment.replies = [];
+                }
+                parentComment.replies.push(data.comment);
+
+                // Reset form
+                this.formData = {
+                    content: '',
+                    author_name: '',
+                    author_email: '',
+                    parent_id: null
+                };
+
+                this.replyingTo = null;
+
+            } catch (error) {
+                this.error = error.message;
+                console.error('Error submitting reply:', error);
             } finally {
                 this.isSubmitting = false;
             }
