@@ -144,18 +144,104 @@
                                         <h6 x-text="reply.author_name" class="font-medium"></h6>
                                         <p class="text-sm text-gray-500" x-text="formatDate(reply.created_at)"></p>
                                     </div>
-                                    <button 
-                                        @click="likeComment(reply)"
-                                        class="flex items-center space-x-1 text-gray-500 hover:text-blue-600"
-                                        :class="{ 'text-blue-600': reply.liked }"
-                                    >
-                                        <span x-text="reply.likes_count || 0"></span>
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
-                                        </svg>
-                                    </button>
+                                    <div class="flex items-center space-x-4">
+                                        <button 
+                                            @click="likeComment(reply)"
+                                            class="flex items-center space-x-1 text-gray-500 hover:text-blue-600"
+                                            :class="{ 'text-blue-600': reply.liked }"
+                                        >
+                                            <span x-text="reply.likes_count || 0"></span>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+                                            </svg>
+                                        </button>
+                                        <button 
+                                            @click="startReply(reply)"
+                                            class="text-gray-500 hover:text-blue-600 text-sm"
+                                        >
+                                            Reply
+                                        </button>
+                                    </div>
                                 </div>
                                 <p x-text="reply.content" class="mt-2"></p>
+
+                                {{-- Reply to Reply Form --}}
+                                <div x-show="replyingTo === reply.id" class="mt-4">
+                                    <form @submit.prevent="submitReply(comment, reply)">
+                                        <textarea
+                                            x-model="formData.content"
+                                            class="w-full rounded-lg border-gray-300 shadow-sm"
+                                            rows="3"
+                                            placeholder="Write your reply..."
+                                            :disabled="isSubmitting"
+                                            @mention="handleMention"
+                                        ></textarea>
+
+                                        @guest
+                                            <div class="grid grid-cols-2 gap-4 mt-4">
+                                                <input
+                                                    type="text"
+                                                    x-model="formData.author_name"
+                                                    class="rounded-lg border-gray-300"
+                                                    placeholder="Your name"
+                                                    :disabled="isSubmitting"
+                                                >
+                                                <input
+                                                    type="email"
+                                                    x-model="formData.author_email"
+                                                    class="rounded-lg border-gray-300"
+                                                    placeholder="Your email"
+                                                    :disabled="isSubmitting"
+                                                >
+                                            </div>
+                                        @endguest
+
+                                        <div class="mt-2 space-x-2">
+                                            <button 
+                                                type="submit" 
+                                                class="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+                                                :disabled="isSubmitting"
+                                            >
+                                                <span x-show="!isSubmitting">Submit Reply</span>
+                                                <span x-show="isSubmitting">Submitting...</span>
+                                            </button>
+                                            <button 
+                                                @click="cancelReply" 
+                                                type="button"
+                                                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                {{-- Nested Replies to Replies --}}
+                                <template x-if="reply.replies && reply.replies.length > 0">
+                                    <div class="mt-4 ml-6 space-y-4">
+                                        <template x-for="nestedReply in reply.replies" :key="nestedReply.id">
+                                            <div class="bg-gray-100 rounded-lg p-4">
+                                                <div class="flex justify-between">
+                                                    <div>
+                                                        <h6 x-text="nestedReply.author_name" class="font-medium"></h6>
+                                                        <p class="text-sm text-gray-500" x-text="formatDate(nestedReply.created_at)"></p>
+                                                    </div>
+                                                    <button 
+                                                        @click="likeComment(nestedReply)"
+                                                        class="flex items-center space-x-1 text-gray-500 hover:text-blue-600"
+                                                        :class="{ 'text-blue-600': nestedReply.liked }"
+                                                    >
+                                                        <span x-text="nestedReply.likes_count || 0"></span>
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <p x-text="nestedReply.content" class="mt-2"></p>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
                             </div>
                         </template>
                     </div>
@@ -299,7 +385,7 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        async submitReply(parentComment) {
+        async submitReply(parentComment, replyingToComment = null) {
             if (this.isSubmitting) return;
             this.error = null;
             this.isSubmitting = true;
@@ -321,11 +407,19 @@ document.addEventListener('alpine:init', () => {
                     throw new Error(data.message || 'Failed to submit reply');
                 }
 
-                // Add the new reply to the parent comment's replies
-                if (!parentComment.replies) {
-                    parentComment.replies = [];
+                // If replying to a reply, add to that reply's replies array
+                if (replyingToComment) {
+                    if (!replyingToComment.replies) {
+                        replyingToComment.replies = [];
+                    }
+                    replyingToComment.replies.push(data.comment);
+                } else {
+                    // Otherwise, add to parent comment's replies
+                    if (!parentComment.replies) {
+                        parentComment.replies = [];
+                    }
+                    parentComment.replies.push(data.comment);
                 }
-                parentComment.replies.push(data.comment);
 
                 // Reset form
                 this.formData = {
