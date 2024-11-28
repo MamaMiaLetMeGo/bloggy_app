@@ -3,22 +3,8 @@
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div class="p-6">
-            <h1 class="text-3xl font-bold mb-4">Live Location Tracker</h1>
-            
-            <div class="h-[600px] md:h-[800px]"> <!-- Increased height -->
-                <iframe 
-                    src="https://share.garmin.com/mistie" 
-                    frameborder="0" 
-                    class="w-full h-full"
-                    allowfullscreen
-                    style="min-height: 600px;" <!-- Fallback min-height -->
-                ></iframe>
-            </div>
-        </div>
-
-        {{-- Subscribe Section --}}
-        <div class="p-6 bg-gray-50 border-t mt-4"> <!-- Added margin top -->
+        {{-- Subscribe Section - Moved to top --}}
+        <div class="p-6 bg-gray-50 border-b"> {{-- Changed border-t to border-b --}}
             <h2 class="text-xl font-semibold mb-4">Get Movement Notifications</h2>
             <form action="{{ route('location.subscribe') }}" method="POST" class="space-y-4">
                 @csrf
@@ -36,6 +22,21 @@
                     Subscribe to Updates
                 </button>
             </form>
+        </div>
+
+        {{-- Map Section --}}
+        <div class="p-6">
+            <h1 class="text-3xl font-bold mb-4">Live Location Tracker</h1>
+            
+            <div class="h-[600px] md:h-[800px]">
+                <iframe 
+                    src="https://share.garmin.com/mistie" 
+                    frameborder="0" 
+                    class="w-full h-full"
+                    allowfullscreen
+                    style="min-height: 600px;"
+                ></iframe>
+            </div>
         </div>
     </div>
 </div>
