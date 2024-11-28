@@ -14,6 +14,7 @@ use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\Admin\CommentController as AdminCommentController;
+use App\Http\Controllers\LocationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +35,10 @@ Route::get('/', function () {
 
 Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
+Route::get('/location', [LocationController::class, 'show'])->name('location.show');
+Route::post('/location/subscribe', [LocationController::class, 'subscribe'])->name('location.subscribe');
+Route::get('/location/unsubscribe/{email}', [LocationController::class, 'unsubscribe'])->name('location.unsubscribe');
+Route::post('/webhooks/garmin', [LocationController::class, 'handleGarminWebhook'])->name('webhook.garmin');
 
 // Auth routes
 Route::middleware('guest')->group(function () {
