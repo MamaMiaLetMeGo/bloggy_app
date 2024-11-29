@@ -27,7 +27,8 @@ class User extends Authenticatable
         'password',
         'bio',                 // Add if you want author bios
         'profile_image',       // Add if you want author images
-        'social_links',        // Add if you want social media links
+        'social_links',
+        'is_admin',
     ];
 
     /**
@@ -195,5 +196,10 @@ class User extends Authenticatable
     public function isActiveAuthor(): bool
     {
         return $this->publishedPosts()->exists();
+    }
+
+    public function isAdmin()
+    {
+        return $this->is_admin;
     }
 }
