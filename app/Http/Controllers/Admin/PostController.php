@@ -15,32 +15,12 @@ class PostController extends Controller
     /**
      * Display a listing of the posts.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $query = Post::with(['author', 'categories'])
-            ->latest();
+        $posts = Post::with(['categories', 'author'])
+            ->latest()
+            ->paginate(10);
 
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        // Filter by category
-        if ($request->filled('category')) {
-            $query->whereHas('categories', function ($q) use ($request) {
-                $q->where('id', $request->category);
-            });
-        }
-
-        // Search functionality
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('title', 'like', "%{$request->search}%")
-                  ->orWhere('body_content', 'like', "%{$request->search}%");
-            });
-        }
-
-        $posts = $query->paginate(10);
         $categories = Category::orderBy('name')->get();
 
         return view('admin.posts.index', compact('posts', 'categories'));

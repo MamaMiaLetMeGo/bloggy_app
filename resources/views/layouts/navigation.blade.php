@@ -6,20 +6,31 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('home') }}">
-                        {{ config('app.name', 'Charles Gendron') }}
+                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.index')">
-                        {{ __('Categories') }}
+                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                    <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
+                        {{ __('Home') }}
                     </x-nav-link>
-                    @auth
-                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                            {{ __('Dashboard') }}
-                        </x-nav-link>
-                    @endauth
+                    
+                    <x-nav-link href="/travel" :active="request()->is('travel*')">
+                        {{ __('Travel') }}
+                    </x-nav-link>
+                    
+                    <x-nav-link href="/sailing" :active="request()->is('sailing*')">
+                        {{ __('Sailing') }}
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('location.show')" :active="request()->routeIs('location.show')">
+                        {{ __('Location') }}
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('contact.show')" :active="request()->routeIs('contact.show')">
+                        {{ __('Contact') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -84,14 +95,22 @@
             <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
                 {{ __('Home') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('categories.index')" :active="request()->routeIs('categories.index')">
-                {{ __('Categories') }}
+            
+            <x-responsive-nav-link href="/travel" :active="request()->is('travel*')">
+                {{ __('Travel') }}
             </x-responsive-nav-link>
-            @auth
-                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                    {{ __('Dashboard') }}
-                </x-responsive-nav-link>
-            @endauth
+            
+            <x-responsive-nav-link href="/sailing" :active="request()->is('sailing*')">
+                {{ __('Sailing') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link :href="route('location.show')" :active="request()->routeIs('location.show')">
+                {{ __('Location') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link :href="route('contact.show')" :active="request()->routeIs('contact.show')">
+                {{ __('Contact') }}
+            </x-responsive-nav-link>
         </div>
 
         <!-- Responsive Settings Options -->
