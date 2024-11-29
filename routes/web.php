@@ -15,6 +15,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\Admin\CommentController as AdminCommentController;
 use App\Http\Controllers\LocationController;
+use App\Http\Middleware\IsAdmin;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,29 +63,32 @@ Route::get('/dashboard', function () {
 })->middleware(['auth'])->name('dashboard');
 
 // Admin routes
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
-   // Dashboard
-   Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-   
-   // Posts Management
-   Route::resource('posts', AdminPostController::class);
-   Route::post('/upload-video', [AdminPostController::class, 'videoUpload'])->name('video.upload');
-   Route::post('/upload-image', [AdminPostController::class, 'uploadImages'])->name('image.upload');
+Route::middleware(['auth', 'verified', IsAdmin::class])->prefix('admin')->name('admin.')->group(function () {
+    // Dashboard
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Posts Management
+    Route::resource('posts', AdminPostController::class);
+    Route::post('/upload-video', [AdminPostController::class, 'videoUpload'])->name('video.upload');
+    Route::post('/upload-image', [AdminPostController::class, 'uploadImages'])->name('image.upload');
 
+    // Category Management
+    Route::resource('categories', AdminCategoryController::class);
+    Route::post('/categories/upload-image', [AdminCategoryController::class, 'uploadImages'])->name('categories.image.upload');
+    
+    // Post Status Management
+    Route::post('/posts/{post}/publish', [AdminPostController::class, 'publish'])->name('posts.publish');
+    Route::post('/posts/{post}/unpublish', [AdminPostController::class, 'unpublish'])->name('posts.unpublish');
+    Route::post('/posts/{post}/archive', [AdminPostController::class, 'archive'])->name('posts.archive');
 
+    // Category Featured Toggle
+    Route::post('categories/{category}/toggle-featured', [AdminCategoryController::class, 'toggleFeatured'])
+        ->name('categories.toggleFeatured');
 
-   // Category Management
-   Route::resource('categories', AdminCategoryController::class);
-   Route::post('/categories/upload-image', [AdminCategoryController::class, 'uploadImages'])->name('categories.image.upload');
-   
-   // Post Status Management
-   Route::post('/posts/{post}/publish', [AdminPostController::class, 'publish'])->name('posts.publish');
-   Route::post('/posts/{post}/unpublish', [AdminPostController::class, 'unpublish'])->name('posts.unpublish');
-   Route::post('/posts/{post}/archive', [AdminPostController::class, 'archive'])->name('posts.archive');
-
-   // Category Featured Toggle
-   Route::post('categories/{category}/toggle-featured', [AdminCategoryController::class, 'toggleFeatured'])
-       ->name('categories.toggleFeatured');
+    // Comments Management
+    Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
+    Route::patch('/comments/{comment}/approve', [AdminCommentController::class, 'approve'])->name('comments.approve');
+    Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
 });
 
 // Profile routes
@@ -119,13 +123,6 @@ Route::post('/comments/{comment}/like', [CommentController::class, 'like'])
 
 Route::get('/posts/{post}/commenters', [CommentController::class, 'commenters'])
 ->name('posts.commenters');
-
-// Admin comment management
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
-    Route::patch('/comments/{comment}/approve', [AdminCommentController::class, 'approve'])->name('comments.approve');
-    Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
-});
 
 // Dynamic routes last (keep these at the bottom)
 Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');

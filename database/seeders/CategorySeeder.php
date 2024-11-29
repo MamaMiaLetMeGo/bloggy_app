@@ -2,43 +2,33 @@
 
 namespace Database\Seeders;
 
-use App\Models\Category;
 use Illuminate\Database\Seeder;
+use App\Models\Category;
+use Illuminate\Support\Str;
 
 class CategorySeeder extends Seeder
 {
-    public function run(): void
+    public function run()
     {
         $categories = [
             [
-                'name' => 'Technology',
-                'description' => 'Latest tech news and updates'
-            ],
-            [
-                'name' => 'Business',
-                'description' => 'Business and finance insights'
-            ],
-            [
-                'name' => 'Lifestyle',
-                'description' => 'Tips for better living'
-            ],
-            [
                 'name' => 'Travel',
-                'description' => 'Travel guides and experiences'
+                'slug' => 'travel',
+                'description' => 'Travel adventures and experiences',
+                'is_featured' => true,
             ],
             [
-                'name' => 'Health & Wellness',
-                'description' => 'Health tips and wellness advice'
+                'name' => 'Sailing',
+                'slug' => 'sailing',
+                'description' => 'Sailing journeys and maritime adventures',
+                'is_featured' => true,
             ],
         ];
 
         foreach ($categories as $category) {
             Category::firstOrCreate(
-                ['name' => $category['name']],
-                [
-                    'description' => $category['description'],
-                    'slug' => \Str::slug($category['name'])
-                ]
+                ['slug' => $category['slug']],
+                $category
             );
         }
     }
