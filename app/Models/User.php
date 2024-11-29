@@ -202,4 +202,9 @@ class User extends Authenticatable
     {
         return $this->is_admin;
     }
+
+    public function newsletterSubscription()
+    {
+        return $this->hasOne(NewsletterSubscription::class);
+    }
 }
