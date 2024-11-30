@@ -19,6 +19,7 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\WelcomeBackController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +46,9 @@ Route::get('/location/unsubscribe/{email}', [LocationController::class, 'unsubsc
 Route::post('/webhooks/garmin', [LocationController::class, 'handleGarminWebhook'])->name('webhook.garmin');
 Route::get('/welcome', [WelcomeController::class, 'newUser'])
     ->name('welcome.new-user')
+    ->middleware('auth');
+Route::get('/welcome-back', [WelcomeBackController::class, 'index'])
+    ->name('welcome.back')
     ->middleware('auth');
 
 // Auth routes

@@ -20,12 +20,30 @@ class AuthorController extends Controller
 
     public function index(): View
     {
+        // Get regular authors
         $authors = User::whereHas('publishedPosts')
             ->withCount('publishedPosts')
+            ->withCount(['comments' => function ($query) {
+                $query->whereHas('post', function ($q) {
+                    $q->published();
+                });
+            }])
             ->orderByDesc('published_posts_count')
             ->paginate(12);
 
-        return view('authors.index', compact('authors'));
+        // Get featured authors (those with most published posts)
+        $featuredAuthors = User::whereHas('publishedPosts')
+            ->withCount('publishedPosts')
+            ->withCount(['comments' => function ($query) {
+                $query->whereHas('post', function ($q) {
+                    $q->published();
+                });
+            }])
+            ->orderByDesc('published_posts_count')
+            ->take(3)
+            ->get();
+
+        return view('authors.index', compact('authors', 'featuredAuthors'));
     }
 
     public function show(User $user): View
