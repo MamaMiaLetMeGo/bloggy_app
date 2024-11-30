@@ -3,149 +3,102 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CategoryViewController;
-use App\Http\Controllers\Admin\PostController as AdminPostController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Models\Post;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CommentController;
-use App\Http\Controllers\Admin\CommentController as AdminCommentController;
 use App\Http\Controllers\LocationController;
-use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\NewsletterController;
-use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\WelcomeBackController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
+Route::middleware('web')->group(function () {
+    // Include auth and admin routes
+    require __DIR__.'/auth.php';
+    require __DIR__.'/admin.php';
 
-// Static routes first
-Route::get('/', function () {
-   $posts = Post::with(['author', 'categories'])
-       ->published()
-       ->latest('published_date')
-       ->take(6)
-       ->get();
+    // Static routes
+    Route::get('/', function () {
+        $posts = Post::with(['author', 'categories'])
+            ->published()
+            ->latest('published_date')
+            ->take(6)
+            ->get();
 
-   return view('home', compact('posts'));
-})->name('home');
+        return view('home', compact('posts'));
+    })->name('home');
 
-Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
-Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
-Route::get('/location', [LocationController::class, 'show'])->name('location.show');
-Route::post('/location/subscribe', [LocationController::class, 'subscribe'])->name('location.subscribe');
-Route::get('/location/unsubscribe/{email}', [LocationController::class, 'unsubscribe'])->name('location.unsubscribe');
-Route::post('/webhooks/garmin', [LocationController::class, 'handleGarminWebhook'])->name('webhook.garmin');
-Route::get('/welcome', [WelcomeController::class, 'newUser'])
-    ->name('welcome.new-user')
-    ->middleware('auth');
-Route::get('/welcome-back', [WelcomeBackController::class, 'index'])
-    ->name('welcome.back')
-    ->middleware('auth');
+    // Public routes
+    Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
+    Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
+    Route::get('/categories', [CategoryViewController::class, 'index'])->name('categories.index');
 
-// Auth routes
-Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
-    Route::post('register', [RegisteredUserController::class, 'store']);
-    Route::get('login', [AuthenticatedSessionController::class, 'create'])
-        ->name('login');
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    // Location routes
+    Route::prefix('location')->name('location.')->group(function () {
+        Route::get('/', [LocationController::class, 'show'])->name('show');
+        Route::post('/subscribe', [LocationController::class, 'subscribe'])->name('subscribe');
+        Route::get('/unsubscribe/{email}', [LocationController::class, 'unsubscribe'])->name('unsubscribe');
+    });
+
+    // Webhook routes
+    Route::post('/webhooks/garmin', [LocationController::class, 'handleGarminWebhook'])->name('webhook.garmin');
+
+    // Auth required routes
+    Route::middleware('auth')->group(function () {
+        Route::get('/welcome', [WelcomeController::class, 'newUser'])->name('welcome.new-user');
+        Route::get('/welcome-back', [WelcomeBackController::class, 'index'])->name('welcome.back');
+        
+        // Newsletter routes
+        Route::prefix('newsletter')->name('newsletter.')->group(function () {
+            Route::post('/subscribe', [NewsletterController::class, 'subscribe'])->name('subscribe');
+            Route::post('/unsubscribe', [NewsletterController::class, 'unsubscribe'])->name('unsubscribe');
+        });
+
+        // Profile routes
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/', [ProfileController::class, 'show'])->name('show');
+            Route::get('/edit', [ProfileController::class, 'edit'])->name('edit');
+            Route::patch('/', [ProfileController::class, 'update'])->name('update');
+            Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    // Author routes
+    Route::prefix('authors')->name('authors.')->group(function () {
+        Route::get('/', [AuthorController::class, 'index'])->name('index');
+        Route::get('/{user}', [AuthorController::class, 'show'])->name('show');
+        
+        // Auth required author routes
+        Route::middleware('auth')->group(function () {
+            Route::get('/dashboard', [AuthorController::class, 'dashboard'])->name('dashboard');
+            Route::get('/edit', [AuthorController::class, 'edit'])->name('edit');
+            Route::patch('/update', [AuthorController::class, 'update'])->name('update');
+        });
+    });
+
+    // Comment routes
+    Route::prefix('comments')->name('comments.')->group(function () {
+        Route::get('/{post}', [CommentController::class, 'index'])->name('index');
+        Route::middleware(['auth', 'throttle:60,1'])->group(function () {
+            Route::post('/{post}', [CommentController::class, 'store'])->name('store');
+            Route::post('/{comment}/like', [CommentController::class, 'like'])->name('like');
+        });
+    });
+
+    // Keep these at the bottom (catch-all routes)
+    Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
+    Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
 });
 
-Route::middleware('auth')->group(function () {
-    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
-        ->name('logout');
-    Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])
-        ->name('newsletter.subscribe');
-    Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe'])
-        ->name('newsletter.unsubscribe');
-});
-
-// Other static routes
-Route::get('/categories', [CategoryViewController::class, 'index'])->name('categories.index');
-Route::get('/dashboard', function () {
-    return redirect()->route('admin.dashboard');
-})->middleware(['auth'])->name('dashboard');
-
-// Admin routes
-Route::middleware(['auth', 'verified', IsAdmin::class])->prefix('admin')->name('admin.')->group(function () {
-    // Dashboard
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    
-    // Posts Management
-    Route::resource('posts', AdminPostController::class);
-    Route::post('/upload-video', [AdminPostController::class, 'videoUpload'])->name('video.upload');
-    Route::post('/upload-image', [AdminPostController::class, 'uploadImages'])->name('image.upload');
-
-    // Category Management
-    Route::resource('categories', AdminCategoryController::class);
-    Route::post('/categories/upload-image', [AdminCategoryController::class, 'uploadImages'])->name('categories.image.upload');
-    
-    // Post Status Management
-    Route::post('/posts/{post}/publish', [AdminPostController::class, 'publish'])->name('posts.publish');
-    Route::post('/posts/{post}/unpublish', [AdminPostController::class, 'unpublish'])->name('posts.unpublish');
-    Route::post('/posts/{post}/archive', [AdminPostController::class, 'archive'])->name('posts.archive');
-
-    // Category Featured Toggle
-    Route::post('categories/{category}/toggle-featured', [AdminCategoryController::class, 'toggleFeatured'])
-        ->name('categories.toggleFeatured');
-
-    // Comments Management
-    Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
-    Route::patch('/comments/{comment}/approve', [AdminCommentController::class, 'approve'])->name('comments.approve');
-    Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
-
-    // User Management
-    Route::post('/users/{user}/toggle-admin', [AdminUserController::class, 'toggleAdmin'])
-        ->name('users.toggle-admin');
-});
-
-// Profile routes
-Route::middleware('auth')->group(function () {
-   Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-   Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-   Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-   Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-// Add these author routes before the dynamic routes
-Route::get('/authors', [AuthorController::class, 'index'])->name('authors.index');
-Route::get('/author/{user}', [AuthorController::class, 'show'])->name('authors.show');
-
-// Author dashboard routes (for authenticated authors)
-Route::middleware('auth')->group(function () {
-    Route::get('/author/dashboard', [AuthorController::class, 'dashboard'])->name('author.dashboard');
-    Route::get('/author/edit', [AuthorController::class, 'edit'])->name('author.edit');
-    Route::patch('/author/update', [AuthorController::class, 'update'])->name('author.update');
-});
-
-Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
-    ->name('comments.store')
-    ->middleware('throttle:60,1'); // Rate limiting
-
-Route::get('/posts/{post}/comments', [CommentController::class, 'index'])
-    ->name('comments.index');
-
-Route::post('/comments/{comment}/like', [CommentController::class, 'like'])
-    ->name('comments.like')
-    ->middleware('throttle:60,1');
-
-Route::get('/posts/{post}/commenters', [CommentController::class, 'commenters'])
-->name('posts.commenters');
-
-// Dynamic routes last (keep these at the bottom)
-Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
-Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
-
-// Add this with your other public routes
-
-require __DIR__.'/auth.php';
+// Development only routes
+if (app()->environment('local')) {
+    Route::get('/test-ip', function () {
+        dd([
+            'ip()' => request()->ip(),
+            'getClientIp' => request()->getClientIp(),
+            'server.REMOTE_ADDR' => request()->server('REMOTE_ADDR'),
+            'headers' => request()->headers->all(),
+        ]);
+    });
+}
