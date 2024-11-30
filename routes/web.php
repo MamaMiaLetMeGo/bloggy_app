@@ -18,6 +18,7 @@ use App\Http\Controllers\LocationController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\Admin\AdminUserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -98,6 +99,10 @@ Route::middleware(['auth', 'verified', IsAdmin::class])->prefix('admin')->name('
     Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
     Route::patch('/comments/{comment}/approve', [AdminCommentController::class, 'approve'])->name('comments.approve');
     Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
+
+    // User Management
+    Route::post('/users/{user}/toggle-admin', [AdminUserController::class, 'toggleAdmin'])
+        ->name('users.toggle-admin');
 });
 
 // Profile routes
