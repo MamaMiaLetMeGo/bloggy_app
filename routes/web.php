@@ -16,6 +16,8 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\Admin\CommentController as AdminCommentController;
 use App\Http\Controllers\LocationController;
 use App\Http\Middleware\IsAdmin;
+use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\NewsletterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +42,9 @@ Route::get('/location', [LocationController::class, 'show'])->name('location.sho
 Route::post('/location/subscribe', [LocationController::class, 'subscribe'])->name('location.subscribe');
 Route::get('/location/unsubscribe/{email}', [LocationController::class, 'unsubscribe'])->name('location.unsubscribe');
 Route::post('/webhooks/garmin', [LocationController::class, 'handleGarminWebhook'])->name('webhook.garmin');
+Route::get('/welcome', [WelcomeController::class, 'newUser'])
+    ->name('welcome.new-user')
+    ->middleware('auth');
 
 // Auth routes
 Route::middleware('guest')->group(function () {
@@ -54,6 +59,10 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
+    Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])
+        ->name('newsletter.subscribe');
+    Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe'])
+        ->name('newsletter.unsubscribe');
 });
 
 // Other static routes
@@ -127,5 +136,7 @@ Route::get('/posts/{post}/commenters', [CommentController::class, 'commenters'])
 // Dynamic routes last (keep these at the bottom)
 Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
 Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
+
+// Add this with your other public routes
 
 require __DIR__.'/auth.php';
