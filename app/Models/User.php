@@ -218,4 +218,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Comment::class);
     }
+
+    public function getProfilePhotoUrlAttribute()
+    {
+        // If you're using Laravel's profile photos feature
+        return $this->profile_photo_path
+            ? Storage::url($this->profile_photo_path)
+            : null;
+    }
 }

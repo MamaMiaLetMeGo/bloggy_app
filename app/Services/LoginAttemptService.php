@@ -3,44 +3,37 @@
 namespace App\Services;
 
 use App\Models\User;
-use Illuminate\Support\Str;
-use App\Mail\LoginCodeMail;
-use Illuminate\Support\Facades\Mail;
+use Carbon\Carbon;
 
 class LoginAttemptService
 {
+    const MAX_ATTEMPTS = 5;
+    const LOCKOUT_DURATION = 15; // minutes
+
     public function handleFailedAttempt(User $user)
     {
         $user->increment('failed_login_attempts');
 
-        if ($user->failed_login_attempts >= 3) {
-            $code = Str::random(6);
-            $user->update([
-                'login_code' => $code,
-                'login_code_expires_at' => now()->addHours(1),
-            ]);
-
-            Mail::to($user)->send(new LoginCodeMail($code));
-            return true;
+        if ($user->failed_login_attempts >= self::MAX_ATTEMPTS) {
+            $user->locked_at = Carbon::now();
+            $user->save();
         }
-
-        return false;
     }
 
-    public function verifyLoginCode(User $user, string $code)
+    public function resetAttempts(User $user)
     {
-        if ($user->login_code === $code && 
-            $user->login_code_expires_at > now()) {
-            
-            $user->update([
-                'failed_login_attempts' => 0,
-                'login_code' => null,
-                'login_code_expires_at' => null,
-            ]);
+        $user->failed_login_attempts = 0;
+        $user->locked_at = null;
+        $user->save();
+    }
 
-            return true;
+    public function isLockedOut(User $user): bool
+    {
+        if (!$user->locked_at) {
+            return false;
         }
 
-        return false;
+        $lockoutEnds = Carbon::parse($user->locked_at)->addMinutes(self::LOCKOUT_DURATION);
+        return Carbon::now()->lt($lockoutEnds);
     }
 } 
