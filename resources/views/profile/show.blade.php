@@ -19,23 +19,38 @@
                     <div>
                         <h3 class="text-lg font-medium text-gray-900 mb-2">Basic Information</h3>
                         <div class="bg-gray-50 p-4 rounded-lg">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Name</p>
-                                    <p class="mt-1">{{ $user->name }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Email</p>
-                                    <p class="mt-1">{{ $user->email }}</p>
-                                    @if ($user->email_verified_at)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
-                                            Verified
-                                        </span>
+                            <div class="flex items-start space-x-6">
+                                <div class="flex-shrink-0">
+                                    @if($user->profile_image)
+                                        <img src="{{ Storage::url($user->profile_image) }}" 
+                                             alt="{{ $user->name }}" 
+                                             class="h-24 w-24 object-cover rounded-full">
                                     @else
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mt-1">
-                                            Not Verified
-                                        </span>
+                                        <div class="h-24 w-24 rounded-full bg-blue-600 flex items-center justify-center">
+                                            <span class="text-2xl font-medium text-white">
+                                                {{ substr($user->name, 0, 2) }}
+                                            </span>
+                                        </div>
                                     @endif
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-500">Name</p>
+                                        <p class="mt-1">{{ $user->name }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-500">Email</p>
+                                        <p class="mt-1">{{ $user->email }}</p>
+                                        @if ($user->email_verified_at)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
+                                                Verified
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mt-1">
+                                                Not Verified
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
