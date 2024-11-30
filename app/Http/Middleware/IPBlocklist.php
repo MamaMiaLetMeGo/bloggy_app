@@ -2,29 +2,23 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\LoginAttemptService;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class IPBlocklist
 {
+    public function __construct(
+        private LoginAttemptService $loginAttemptService
+    ) {}
+
     public function handle(Request $request, Closure $next): Response
     {
         $ip = $request->ip();
-        $cacheKey = 'blocked_ip_' . $ip;
-        $isBlocked = Cache::has($cacheKey);
         
-        Log::info('IP Blocklist Check', [
-            'ip' => $ip,
-            'cache_key' => $cacheKey,
-            'is_blocked' => $isBlocked
-        ]);
-
-        if ($isBlocked) {
-            Log::warning('Blocked IP attempted access', ['ip' => $ip]);
-            return response('Your IP address has been blocked due to suspicious activity.', 403);
+        if ($this->loginAttemptService->isBlocked($ip)) {
+            return response('Your IP has been temporarily blocked due to multiple failed login attempts. Please try again later.', 403);
         }
 
         return $next($request);
