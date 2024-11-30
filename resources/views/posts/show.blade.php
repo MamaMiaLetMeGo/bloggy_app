@@ -49,17 +49,21 @@
                 <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ $post->title }}</h1>
                 
                 <div class="flex items-center space-x-4 mb-8">
-                    <a href="{{ $post->author->author_url }}" class="flex items-center text-gray-700 hover:text-blue-600">
+                    <a href="{{ $post->author->author_url }}" class="flex items-center text-gray-700 !no-underline hover:!underline group">
                         <img 
                             src="{{ $post->author->profile_image_url }}" 
                             alt="{{ $post->author->name }}" 
                             class="w-10 h-10 rounded-full mr-3"
                         >
                         <div>
-                            <div class="font-medium">{{ $post->author->name }}</div>
+                            <div class="font-medium group-hover:text-blue-600">{{ $post->author->name }}</div>
                             @if($post->published_date)
-                                <div class="text-sm text-gray-500">
-                                    Published on {{ $post->published_date->format('F j, Y') }}
+                                <div class="text-sm text-gray-500 !no-underline">
+                                    @if($post->updated_at->gt($post->published_date->addMinutes(5)))
+                                        Updated on {{ $post->updated_at->format('F j, Y') }}
+                                    @else
+                                        Published on {{ $post->published_date->format('F j, Y') }}
+                                    @endif
                                 </div>
                             @endif
                         </div>
