@@ -13,9 +13,52 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6" enctype="multipart/form-data">
         @csrf
         @method('patch')
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">
+                {{ __('Profile Image') }}
+            </label>
+            <div class="mt-2 flex items-center space-x-6">
+                <div class="flex-shrink-0">
+                    @if(auth()->user()->profile_image)
+                        <img src="{{ Storage::url(auth()->user()->profile_image) }}" 
+                             alt="{{ auth()->user()->name }}" 
+                             class="h-16 w-16 object-cover rounded-full">
+                    @else
+                        <div class="h-16 w-16 rounded-full bg-blue-600 flex items-center justify-center">
+                            <span class="text-xl font-medium text-white">
+                                {{ substr(auth()->user()->name, 0, 2) }}
+                            </span>
+                        </div>
+                    @endif
+                </div>
+                <div>
+                    <input type="file" 
+                           name="profile_image" 
+                           id="profile_image"
+                           accept="image/*"
+                           class="hidden">
+                    <label for="profile_image" 
+                           class="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        {{ __('Change Image') }}
+                    </label>
+                    @if(auth()->user()->profile_image)
+                        <button type="button" 
+                                onclick="document.getElementById('remove_image').value = '1'"
+                                class="ml-2 text-sm text-red-600 hover:text-red-800">
+                            {{ __('Remove') }}
+                        </button>
+                        <input type="hidden" name="remove_image" id="remove_image" value="0">
+                    @endif
+                </div>
+            </div>
+            @error('profile_image')
+                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
 
         <div>
             <label for="name" class="block text-sm font-medium text-gray-700">
