@@ -25,6 +25,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'provider',
+        'provider_id',
+        'two_factor_secret',
+        'two_factor_enabled',
+        'failed_login_attempts',
+        'login_code',
         'bio',                 // Add if you want author bios
         'profile_image',       // Add if you want author images
         'social_links',
@@ -46,15 +52,15 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'social_links' => 'array',    // For JSON storage of social media links
-            'is_admin' => 'boolean',
-        ];
-    }
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'social_links' => 'array',    // For JSON storage of social media links
+        'is_admin' => 'boolean',
+        'two_factor_enabled' => 'boolean',
+        'two_factor_confirmed_at' => 'datetime',
+        'login_code_expires_at' => 'datetime',
+    ];
 
     /**
      * Get all posts authored by the user.

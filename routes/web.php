@@ -19,6 +19,9 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Auth\TwoFactorAuthController;
+use App\Http\Controllers\Auth\LoginCodeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,10 +54,12 @@ Route::get('/welcome', [WelcomeController::class, 'newUser'])
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
-    Route::post('register', [RegisteredUserController::class, 'store']);
+    Route::post('register', [RegisteredUserController::class, 'store'])
+        ->middleware(['guest', 'throttle:registration']);
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('login', [AuthenticatedSessionController::class, 'store'])
+        ->middleware(['guest', 'throttle:login']);
 });
 
 Route::middleware('auth')->group(function () {
@@ -141,6 +146,33 @@ Route::get('/posts/{post}/commenters', [CommentController::class, 'commenters'])
 // Dynamic routes last (keep these at the bottom)
 Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
 Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
+
+// Social Login Routes
+Route::get('/auth/{provider}', [SocialAuthController::class, 'redirect'])
+    ->name('social.login');
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])
+    ->name('social.callback');
+
+// 2FA Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/2fa/setup', [TwoFactorAuthController::class, 'setup'])
+        ->name('2fa.setup');
+    Route::post('/2fa/enable', [TwoFactorAuthController::class, 'enable'])
+        ->name('2fa.enable');
+    Route::post('/2fa/disable', [TwoFactorAuthController::class, 'disable'])
+        ->name('2fa.disable');
+});
+
+Route::get('/2fa/challenge', [TwoFactorAuthController::class, 'challenge'])
+    ->name('2fa.challenge');
+Route::post('/2fa/verify', [TwoFactorAuthController::class, 'verify'])
+    ->name('2fa.verify');
+
+// Login Code Routes
+Route::get('/login/code', [LoginCodeController::class, 'show'])
+    ->name('login.code');
+Route::post('/login/code/verify', [LoginCodeController::class, 'verify'])
+    ->name('login.code.verify');
 
 // Add this with your other public routes
 
