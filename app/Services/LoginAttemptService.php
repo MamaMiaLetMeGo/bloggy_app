@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Notifications\SecurityAlert;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Jenssegers\Agent\Agent;
 
 class LoginAttemptService
 {
@@ -139,6 +141,49 @@ class LoginAttemptService
             $this->getCodeAttemptKey($email),
             self::MAX_CODE_ATTEMPTS
         );
+    }
+
+    public function notifyFailedAttempts(User $user): void
+    {
+        if (Cache::get($this->getUserAttemptsKey($user->id), 0) === self::VERIFICATION_THRESHOLD) {
+            $user->notify(new SecurityAlert(
+                'Multiple Failed Login Attempts',
+                'We detected multiple failed login attempts on your account. For security, we\'ve enabled additional verification.',
+                'Review Account Activity',
+                route('profile.security'),
+                'warning'
+            ));
+        }
+    }
+
+    public function notifyNewDevice(User $user): void
+    {
+        $agent = new Agent();
+        $deviceInfo = [
+            'device' => $agent->device(),
+            'platform' => $agent->platform(),
+            'browser' => $agent->browser(),
+            'ip' => request()->ip(),
+        ];
+
+        $user->notify(new SecurityAlert(
+            'New Device Login',
+            "A new login was detected from:\nDevice: {$deviceInfo['device']}\nBrowser: {$deviceInfo['browser']}\nPlatform: {$deviceInfo['platform']}\nIP: {$deviceInfo['ip']}",
+            'Review Active Sessions',
+            route('profile.security'),
+            'info'
+        ));
+    }
+
+    public function notifyAccountBlocked(User $user): void
+    {
+        $user->notify(new SecurityAlert(
+            'Account Temporarily Blocked',
+            'Your account has been temporarily blocked due to multiple failed login attempts. This is a security measure to protect your account.',
+            'Contact Support',
+            route('contact'),
+            'error'
+        ));
     }
 
     private function getAttemptsKey(string $ip): string
