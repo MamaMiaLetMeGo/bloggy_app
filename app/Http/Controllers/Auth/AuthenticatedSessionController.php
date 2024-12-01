@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use App\Mail\LoginVerificationCode;
+use Illuminate\Support\Facades\Log;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -43,14 +44,23 @@ class AuthenticatedSessionController extends Controller
                 $needsCode = $this->loginAttemptService->handleFailedAttempt($user);
                 
                 if ($needsCode) {
+                    if (!$this->loginAttemptService->canRequestVerificationCode($user->email)) {
+                        $cooldown = $this->loginAttemptService->getCodeCooldownSeconds($user->email);
+                        return back()->withErrors([
+                            'email' => "Please wait {$cooldown} seconds before requesting another code."
+                        ]);
+                    }
+
                     $code = Str::random(6);
                     session(['verification_code' => $code, 'verification_email' => $user->email]);
                     
+                    $this->loginAttemptService->recordVerificationCodeRequest($user->email);
+                    
                     try {
                         Mail::to($user)->send(new LoginVerificationCode($code));
-                        \Log::info('Verification code email sent', ['email' => $user->email]);
+                        Log::info('Verification code email sent', ['email' => $user->email]);
                     } catch (\Exception $e) {
-                        \Log::error('Failed to send verification code email', [
+                        Log::error('Failed to send verification code email', [
                             'email' => $user->email,
                             'error' => $e->getMessage()
                         ]);
@@ -85,34 +95,36 @@ class AuthenticatedSessionController extends Controller
             'email' => 'required|email'
         ]);
 
+        if (!$this->loginAttemptService->canAttemptVerificationCode($request->email)) {
+            return back()->withErrors([
+                'code' => 'Too many invalid attempts. Please request a new code.'
+            ]);
+        }
+
+        $this->loginAttemptService->recordVerificationCodeAttempt($request->email);
+
         if (
             $request->code === session('verification_code') &&
             $request->email === session('verification_email')
         ) {
             session()->forget(['verification_code', 'verification_email']);
             
-            // Get the user
             $user = User::where('email', $request->email)->first();
-            
             if ($user) {
-                // Clear failed attempts
                 $this->loginAttemptService->clearFailedAttempts($user);
-                
-                // Log the user in
                 Auth::login($user);
-                
-                // Regenerate session
                 $request->session()->regenerate();
                 
-                \Log::info('User logged in after verification', ['email' => $user->email]);
+                Log::info('User logged in after verification', ['email' => $user->email]);
                 
                 return redirect()->intended(RouteServiceProvider::HOME)
                     ->with('message', 'Login successful!');
             }
         }
 
+        $remainingAttempts = $this->loginAttemptService->getRemainingCodeAttempts($request->email);
         return back()->withErrors([
-            'code' => 'The verification code is invalid.'
+            'code' => "Invalid code. {$remainingAttempts} attempts remaining."
         ]);
     }
 
