@@ -12,13 +12,16 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\WelcomeBackController;
+use App\Http\Controllers\TwoFactorAuthController;
+use App\Http\Controllers\Auth\TwoFactorChallengeController;
+use App\Http\Controllers\SecurityController;
 
 Route::middleware('web')->group(function () {
     // Include auth and admin routes
     require __DIR__.'/auth.php';
     require __DIR__.'/admin.php';
 
-    // Static routes
+    // Static routes and public routes
     Route::get('/', function () {
         $posts = Post::with(['author', 'categories'])
             ->published()
@@ -29,7 +32,6 @@ Route::middleware('web')->group(function () {
         return view('home', compact('posts'));
     })->name('home');
 
-    // Public routes
     Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
     Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
     Route::get('/categories', [CategoryViewController::class, 'index'])->name('categories.index');
@@ -44,8 +46,11 @@ Route::middleware('web')->group(function () {
     // Webhook routes
     Route::post('/webhooks/garmin', [LocationController::class, 'handleGarminWebhook'])->name('webhook.garmin');
 
-    // Auth required routes
-    Route::middleware('auth')->group(function () {
+    // Protected routes that require 2FA
+    Route::middleware(['auth', 'two-factor'])->group(function () {
+        Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
+        
+        // Welcome routes
         Route::get('/welcome', [WelcomeController::class, 'newUser'])->name('welcome.new-user');
         Route::get('/welcome-back', [WelcomeBackController::class, 'index'])->name('welcome.back');
         
@@ -61,34 +66,50 @@ Route::middleware('web')->group(function () {
             Route::get('/edit', [ProfileController::class, 'edit'])->name('edit');
             Route::patch('/', [ProfileController::class, 'update'])->name('update');
             Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
-        });
-    });
+            Route::get('/security', [SecurityController::class, 'show'])->name('security');
 
-    // Author routes
-    Route::prefix('authors')->name('authors.')->group(function () {
-        Route::get('/', [AuthorController::class, 'index'])->name('index');
-        Route::get('/{user}', [AuthorController::class, 'show'])->name('show');
-        
-        // Auth required author routes
-        Route::middleware('auth')->group(function () {
+            // 2FA Profile Settings
+            Route::prefix('2fa')->name('2fa.')->group(function () {
+                Route::get('/', [TwoFactorAuthController::class, 'show'])->name('show');
+                Route::post('/enable', [TwoFactorAuthController::class, 'enable'])->name('enable');
+                Route::post('/disable', [TwoFactorAuthController::class, 'disable'])->name('disable');
+                Route::get('/recovery-codes', [TwoFactorAuthController::class, 'showRecoveryCodes'])->name('recovery-codes');
+                Route::post('/recovery-codes', [TwoFactorAuthController::class, 'regenerateRecoveryCodes'])->name('recovery-codes.regenerate');
+            });
+        });
+
+        // Author routes
+        Route::prefix('authors')->name('authors.')->group(function () {
+            Route::get('/', [AuthorController::class, 'index'])->name('index');
+            Route::get('/{user}', [AuthorController::class, 'show'])->name('show');
             Route::get('/dashboard', [AuthorController::class, 'dashboard'])->name('dashboard');
             Route::get('/edit', [AuthorController::class, 'edit'])->name('edit');
             Route::patch('/update', [AuthorController::class, 'update'])->name('update');
         });
+
+        // Comment routes
+        Route::prefix('comments')->name('comments.')->group(function () {
+            Route::get('/{post}', [CommentController::class, 'index'])->name('index');
+            Route::middleware('throttle:60,1')->group(function () {
+                Route::post('/{post}', [CommentController::class, 'store'])->name('store');
+                Route::post('/{comment}/like', [CommentController::class, 'like'])->name('like');
+            });
+        });
+
+        // Keep these at the bottom (catch-all routes)
+        Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
+        Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
     });
 
-    // Comment routes
-    Route::prefix('comments')->name('comments.')->group(function () {
-        Route::get('/{post}', [CommentController::class, 'index'])->name('index');
-        Route::middleware(['auth', 'throttle:60,1'])->group(function () {
-            Route::post('/{post}', [CommentController::class, 'store'])->name('store');
-            Route::post('/{comment}/like', [CommentController::class, 'like'])->name('like');
+    // 2FA verification routes (without 2FA middleware)
+    Route::middleware(['auth'])->group(function () {
+        Route::prefix('2fa')->name('2fa.')->group(function () {
+            Route::get('/', [TwoFactorChallengeController::class, 'create'])->name('challenge');
+            Route::post('/', [TwoFactorChallengeController::class, 'store'])->name('verify');
+            Route::get('/recovery', [TwoFactorChallengeController::class, 'showRecoveryForm'])->name('recovery');
+            Route::post('/recovery', [TwoFactorChallengeController::class, 'recovery'])->name('recovery.store');
         });
     });
-
-    // Keep these at the bottom (catch-all routes)
-    Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
-    Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
 });
 
 // Development only routes

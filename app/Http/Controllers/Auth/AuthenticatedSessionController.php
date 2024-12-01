@@ -42,12 +42,19 @@ class AuthenticatedSessionController extends Controller
                     'New Device Login',
                     'A new login was detected from a device we don\'t recognize.',
                     'Review Active Sessions',
-                    route('profile.security'),
+                    route('profile.2fa.show'),
                     'info'
                 ));
+                
+                $this->loginAttemptService->markDeviceAsKnown($user);
             }
 
-            return redirect()->intended(RouteServiceProvider::HOME);
+            if ($user->isAdmin()) {
+                return redirect()->route('admin.dashboard');
+            }
+
+            return redirect()->route('welcome.back');
+
         } catch (\Exception $e) {
             $this->loginAttemptService->recordFailedAttempt($request->ip());
             
@@ -61,7 +68,7 @@ class AuthenticatedSessionController extends Controller
                         'Multiple Failed Login Attempts',
                         'We detected multiple failed login attempts on your account.',
                         'Review Account Activity',
-                        route('profile.security'),
+                        route('profile.2fa.show'),
                         'warning'
                     ));
                 }

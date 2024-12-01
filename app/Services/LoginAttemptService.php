@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Jenssegers\Agent\Agent;
+use Illuminate\Support\Facades\Hash;
 
 class LoginAttemptService
 {
@@ -17,6 +18,13 @@ class LoginAttemptService
     private const ATTEMPT_DECAY = 60;
     private const MAX_CODE_ATTEMPTS = 3;
     private const CODE_COOLDOWN = 1;
+
+    private $agent;
+
+    public function __construct()
+    {
+        $this->agent = new Agent();
+    }
 
     public function recordFailedAttempt(string $ip): void
     {
@@ -158,11 +166,10 @@ class LoginAttemptService
 
     public function notifyNewDevice(User $user): void
     {
-        $agent = new Agent();
         $deviceInfo = [
-            'device' => $agent->device(),
-            'platform' => $agent->platform(),
-            'browser' => $agent->browser(),
+            'device' => $this->agent->device(),
+            'platform' => $this->agent->platform(),
+            'browser' => $this->agent->browser(),
             'ip' => request()->ip(),
         ];
 
@@ -184,6 +191,35 @@ class LoginAttemptService
             route('contact'),
             'error'
         ));
+    }
+
+    public function isKnownDevice(User $user): bool
+    {
+        $deviceId = $this->generateDeviceId();
+        $knownDevices = Cache::get("user.{$user->id}.known_devices", []);
+        
+        return in_array($deviceId, $knownDevices);
+    }
+
+    public function markDeviceAsKnown(User $user): void
+    {
+        $deviceId = $this->generateDeviceId();
+        $knownDevices = Cache::get("user.{$user->id}.known_devices", []);
+        
+        if (!in_array($deviceId, $knownDevices)) {
+            $knownDevices[] = $deviceId;
+            Cache::put("user.{$user->id}.known_devices", $knownDevices, now()->addMonths(6));
+        }
+    }
+
+    private function generateDeviceId(): string
+    {
+        $userAgent = request()->userAgent();
+        $ip = request()->ip();
+        $browser = $this->agent->browser();
+        $platform = $this->agent->platform();
+        
+        return Hash::make($userAgent . $ip . $browser . $platform);
     }
 
     private function getAttemptsKey(string $ip): string
