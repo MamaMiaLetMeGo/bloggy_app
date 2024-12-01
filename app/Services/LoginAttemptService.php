@@ -5,13 +5,16 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 
 class LoginAttemptService
 {
     private const MAX_ATTEMPTS = 5;
     private const VERIFICATION_THRESHOLD = 2;
-    private const BLOCK_DURATION = 90; // minutes
-    private const ATTEMPT_DECAY = 60; // minutes
+    private const BLOCK_DURATION = 30;
+    private const ATTEMPT_DECAY = 60;
+    private const MAX_CODE_ATTEMPTS = 3;
+    private const CODE_COOLDOWN = 1;
 
     public function recordFailedAttempt(string $ip): void
     {
@@ -96,6 +99,48 @@ class LoginAttemptService
         ]);
     }
 
+    public function canRequestVerificationCode(string $email): bool
+    {
+        return !RateLimiter::tooManyAttempts(
+            $this->getCodeRequestKey($email),
+            1
+        );
+    }
+
+    public function recordVerificationCodeRequest(string $email): void
+    {
+        RateLimiter::hit(
+            $this->getCodeRequestKey($email),
+            60 * self::CODE_COOLDOWN
+        );
+    }
+
+    public function canAttemptVerificationCode(string $email): bool
+    {
+        return !RateLimiter::tooManyAttempts(
+            $this->getCodeAttemptKey($email),
+            self::MAX_CODE_ATTEMPTS
+        );
+    }
+
+    public function recordVerificationCodeAttempt(string $email): void
+    {
+        RateLimiter::hit($this->getCodeAttemptKey($email));
+    }
+
+    public function getCodeCooldownSeconds(string $email): int
+    {
+        return RateLimiter::availableIn($this->getCodeRequestKey($email));
+    }
+
+    public function getRemainingCodeAttempts(string $email): int
+    {
+        return RateLimiter::remaining(
+            $this->getCodeAttemptKey($email),
+            self::MAX_CODE_ATTEMPTS
+        );
+    }
+
     private function getAttemptsKey(string $ip): string
     {
         return "login_attempts_{$ip}";
@@ -109,5 +154,15 @@ class LoginAttemptService
     private function getBlockKey(string $ip): string
     {
         return "blocked_ip_{$ip}";
+    }
+
+    private function getCodeRequestKey(string $email): string
+    {
+        return 'verification_code_request:' . $email;
+    }
+
+    private function getCodeAttemptKey(string $email): string
+    {
+        return 'verification_code_attempt:' . $email;
     }
 } 
