@@ -35,6 +35,8 @@ Route::middleware('web')->group(function () {
     Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
     Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
     Route::get('/categories', [CategoryViewController::class, 'index'])->name('categories.index');
+    Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
+    Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
 
     // Location routes
     Route::prefix('location')->name('location.')->group(function () {
@@ -108,8 +110,7 @@ Route::middleware('web')->group(function () {
     });
 
         // Keep these at the bottom (catch-all routes)
-        Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
-        Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
+        
     });
 
 });
