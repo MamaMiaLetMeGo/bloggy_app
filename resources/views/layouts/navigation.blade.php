@@ -79,6 +79,9 @@
                             <x-dropdown-link :href="route('profile.show')">
                                 {{ __('Profile') }}
                             </x-dropdown-link>
+                            <x-dropdown-link :href="route('profile.2fa.show')">
+                                {{ __('Two-Factor Authentication') }}
+                            </x-dropdown-link>
 
                             <!-- Authentication -->
                             <form method="POST" action="{{ route('logout') }}">
@@ -150,6 +153,9 @@
                 <div class="mt-3 space-y-1">
                     <x-responsive-nav-link :href="route('profile.show')">
                         {{ __('Profile') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('profile.2fa.show')">
+                        {{ __('Two-Factor Authentication') }}
                     </x-responsive-nav-link>
 
                     <!-- Authentication -->

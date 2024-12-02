@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use App\Mail\LoginVerificationCode;
 use Illuminate\Support\Facades\Log;
+use App\Notifications\SecurityAlert;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -34,7 +35,26 @@ class AuthenticatedSessionController extends Controller
             $request->authenticate();
             $request->session()->regenerate();
 
-            return redirect()->intended(RouteServiceProvider::HOME);
+            $user = User::where('email', $request->email)->first();
+            
+            if (!$this->loginAttemptService->isKnownDevice($user)) {
+                $user->notify(new SecurityAlert(
+                    'New Device Login',
+                    'A new login was detected from a device we don\'t recognize.',
+                    'Review Active Sessions',
+                    route('profile.2fa.show'),
+                    'info'
+                ));
+                
+                $this->loginAttemptService->markDeviceAsKnown($user);
+            }
+
+            if ($user->isAdmin()) {
+                return redirect()->route('admin.dashboard');
+            }
+
+            return redirect()->route('welcome.back');
+
         } catch (\Exception $e) {
             $this->loginAttemptService->recordFailedAttempt($request->ip());
             
@@ -42,6 +62,16 @@ class AuthenticatedSessionController extends Controller
             
             if ($user) {
                 $needsCode = $this->loginAttemptService->handleFailedAttempt($user);
+                
+                if ($needsCode) {
+                    $user->notify(new SecurityAlert(
+                        'Multiple Failed Login Attempts',
+                        'We detected multiple failed login attempts on your account.',
+                        'Review Account Activity',
+                        route('profile.2fa.show'),
+                        'warning'
+                    ));
+                }
                 
                 if ($needsCode) {
                     if (!$this->loginAttemptService->canRequestVerificationCode($user->email)) {

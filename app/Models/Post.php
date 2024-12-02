@@ -133,21 +133,21 @@ class Post extends Model
 
     public function getFeaturedImageUrlAttribute(): string
     {
-    if (!$this->featured_image) {
-        return '/images/default-post-image.jpg';
-    }
-
-    try {
-        if (Storage::disk('public')->exists($this->featured_image)) {
-            return asset('storage/' . $this->featured_image);
-        } else {
-            \Log::error('Featured image not found: ' . $this->featured_image);
-            return '/images/default-post-image.jpg';
+        if (!$this->featured_image) {
+            return asset('images/default-post-image.jpg');
         }
-    } catch (\Exception $e) {
-        \Log::error('Error getting featured image: ' . $e->getMessage());
-        return '/images/default-post-image.jpg';
-    }
+
+        try {
+            if (Storage::disk('public')->exists($this->featured_image)) {
+                return asset('storage/' . $this->featured_image);
+            } else {
+                \Log::error('Featured image not found: ' . $this->featured_image);
+                return asset('images/default-post-image.jpg');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error getting featured image: ' . $e->getMessage());
+            return asset('images/default-post-image.jpg');
+        }
     }
 
     public function isPublished(): bool

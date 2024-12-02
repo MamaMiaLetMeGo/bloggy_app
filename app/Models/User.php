@@ -226,4 +226,25 @@ class User extends Authenticatable
             ? Storage::url($this->profile_photo_path)
             : null;
     }
+
+    public function enableTwoFactor(): void
+    {
+        $this->two_factor_enabled = true;
+        $this->two_factor_confirmed_at = now();
+        $this->save();
+    }
+
+    public function disableTwoFactor(): void
+    {
+        $this->two_factor_enabled = false;
+        $this->two_factor_confirmed_at = null;
+        $this->two_factor_secret = null;
+        $this->two_factor_recovery_codes = null;
+        $this->save();
+    }
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_enabled && $this->two_factor_confirmed_at !== null;
+    }
 }
