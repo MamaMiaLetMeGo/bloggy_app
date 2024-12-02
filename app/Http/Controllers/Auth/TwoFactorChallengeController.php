@@ -26,16 +26,18 @@ class TwoFactorChallengeController extends Controller
         if ($google2fa->verifyKey($user->two_factor_secret, $request->code)) {
             session(['2fa.confirmed' => true]);
             
-            // Notify about successful 2FA verification
-            $user->notify(new SecurityAlert(
-                'Successful 2FA Login',
-                'Your account was successfully accessed using two-factor authentication.',
-                'Review Activity',
-                route('profile.security'),
-                'info'
-            ));
-
-            return redirect()->intended();
+            // Get intended URL
+            $intended = session()->get('url.intended');
+            
+            // If intended URL is an asset or not set, use welcome.back route
+            if (!$intended || str_contains($intended, 'images/')) {
+                $intended = route('welcome.back');
+            }
+            
+            // Clear the intended URL
+            session()->forget('url.intended');
+            
+            return redirect()->to($intended);
         }
 
         return back()->withErrors(['code' => 'The provided code was invalid.']);
@@ -72,7 +74,7 @@ class TwoFactorChallengeController extends Controller
                 'warning'
             ));
 
-            return redirect()->intended();
+            return redirect()->intended(route('welcome.back'));
         }
 
         return back()->withErrors(['recovery_code' => 'The provided recovery code was invalid.']);
