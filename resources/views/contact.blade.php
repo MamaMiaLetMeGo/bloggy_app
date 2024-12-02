@@ -18,7 +18,7 @@
                 <div class="p-8 md:w-2/3">
                     <h1 class="text-3xl font-bold text-gray-900 mb-4">Let's Connect!</h1>
                     <p class="text-lg text-gray-600 mb-6">
-                        I'm always interested in hearing from readers and fellow enthusiasts. 
+                        I'm always interested in hearing from readers and fellow travel and sailing enthusiasts. 
                         Whether you have a question, suggestion, or just want to say hello, 
                         feel free to reach out!
                     </p>
