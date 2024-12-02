@@ -96,11 +96,7 @@ Route::middleware('web')->group(function () {
             });
         });
 
-        // Keep these at the bottom (catch-all routes)
-        Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
-        Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
-    });
-
+        
     // 2FA verification routes (without 2FA middleware)
     Route::middleware(['auth'])->group(function () {
         Route::prefix('2fa')->name('2fa.')->group(function () {
@@ -110,6 +106,12 @@ Route::middleware('web')->group(function () {
             Route::post('/recovery', [TwoFactorChallengeController::class, 'recovery'])->name('recovery.store');
         });
     });
+
+        // Keep these at the bottom (catch-all routes)
+        Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
+        Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
+    });
+
 });
 
 // Development only routes
