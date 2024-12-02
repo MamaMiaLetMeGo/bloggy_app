@@ -15,7 +15,7 @@ use App\Http\Controllers\WelcomeBackController;
 use App\Http\Controllers\TwoFactorAuthController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\SecurityController;
-
+use App\Http\Controllers\Admin\DashboardController;
 Route::middleware('web')->group(function () {
     // Include auth and admin routes
     require __DIR__.'/auth.php';
@@ -32,11 +32,10 @@ Route::middleware('web')->group(function () {
         return view('home', compact('posts'));
     })->name('home');
 
+    // Fixed routes (non-dynamic segments)
     Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
     Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
     Route::get('/categories', [CategoryViewController::class, 'index'])->name('categories.index');
-    Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
-    Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
 
     // Location routes
     Route::prefix('location')->name('location.')->group(function () {
@@ -48,9 +47,19 @@ Route::middleware('web')->group(function () {
     // Webhook routes
     Route::post('/webhooks/garmin', [LocationController::class, 'handleGarminWebhook'])->name('webhook.garmin');
 
+    // 2FA verification routes (without 2FA middleware)
+    Route::middleware(['auth'])->group(function () {
+        Route::prefix('2fa')->name('2fa.')->group(function () {
+            Route::get('/', [TwoFactorChallengeController::class, 'create'])->name('challenge');
+            Route::post('/', [TwoFactorChallengeController::class, 'store'])->name('verify');
+            Route::get('/recovery', [TwoFactorChallengeController::class, 'showRecoveryForm'])->name('recovery');
+            Route::post('/recovery', [TwoFactorChallengeController::class, 'recovery'])->name('recovery.store');
+        });
+    });
+
     // Protected routes that require 2FA
     Route::middleware(['auth', 'two-factor'])->group(function () {
-        Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
+        Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
         
         // Welcome routes
         Route::get('/welcome', [WelcomeController::class, 'newUser'])->name('welcome.new-user');
@@ -99,19 +108,11 @@ Route::middleware('web')->group(function () {
         });
 
         
-    // 2FA verification routes (without 2FA middleware)
-    Route::middleware(['auth'])->group(function () {
-        Route::prefix('2fa')->name('2fa.')->group(function () {
-            Route::get('/', [TwoFactorChallengeController::class, 'create'])->name('challenge');
-            Route::post('/', [TwoFactorChallengeController::class, 'store'])->name('verify');
-            Route::get('/recovery', [TwoFactorChallengeController::class, 'showRecoveryForm'])->name('recovery');
-            Route::post('/recovery', [TwoFactorChallengeController::class, 'recovery'])->name('recovery.store');
-        });
     });
 
-        // Keep these at the bottom (catch-all routes)
-        
-    });
+    // Catch-all routes for posts and categories (must be last)
+    Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
+    Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
 
 });
 
