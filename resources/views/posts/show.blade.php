@@ -69,8 +69,12 @@
                             @endif
                         </div>
                     </a>
-                    <div class="text-gray-500 text-sm">
-                        {{ $post->reading_time }} min read
+                    <div class="text-gray-500 text-sm flex items-center">
+                        <span class="mr-4">{{ $post->reading_time }} min read</span>
+                        <span class="mx-2">•</span>
+                        <a href="#comments" class="text-gray-500 hover:text-blue-600">
+                            {{ $post->comments()->count() }} {{ Str::plural('Comment', $post->comments()->count()) }}
+                        </a>
                     </div>
                 </div>
 
@@ -195,7 +199,7 @@
 
     {{-- Comments Section - Same width as main content --}}
     <div class="lg:w-3/4">
-        <div class="mt-12">
+        <div class="mt-12" id="comments">
             <x-comments 
                 :postId="$post->id"
                 :commentsCount="$post->comments()->count()"
@@ -241,34 +245,13 @@
 
 @push('scripts')
 <script>
-    // Add copy link button functionality
-    function copyToClipboard() {
-        const el = document.createElement('textarea');
-        el.value = window.location.href;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
-        
-        // Show success message
-        alert('Link copied to clipboard!');
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
-        const article = document.querySelector('.tinymce-content');
-        const toc = document.getElementById('table-of-contents');
-        const headings = article.querySelectorAll('h1, h2');
-        const pageTitle = document.querySelector('h1').textContent; // Get the page title
-        let currentH1Section = null;
-        let currentH1List = null;
+        const article = document.querySelector('article');
+        const tableOfContents = document.getElementById('table-of-contents');
+        const headings = article.querySelectorAll('h1');
+        const headingElements = [];
 
         headings.forEach((heading, index) => {
-            // Skip the page title
-            if (heading.tagName === 'H1' && heading.textContent === pageTitle) {
-                return;
-            }
-
-            // Add IDs to headings if they don't have them
             if (!heading.id) {
                 heading.id = `heading-${index}`;
             }
@@ -277,86 +260,55 @@
             link.href = `#${heading.id}`;
             link.textContent = heading.textContent;
             link.className = 'block text-gray-600 hover:text-blue-600 transition-colors duration-200';
+            link.dataset.target = heading.id;
 
-            if (heading.tagName === 'H1') {
-                const container = document.createElement('div');
-                container.className = 'mb-2';
-
-                const h1Wrapper = document.createElement('div');
-                h1Wrapper.className = 'flex items-center justify-between';
-                
-                link.className += ' font-medium';
-                h1Wrapper.appendChild(link);
-
-                // Add collapse button if there are H2s under this H1
-                const nextHeading = headings[index + 1];
-                if (nextHeading && nextHeading.tagName === 'H2') {
-                    const collapseBtn = document.createElement('button');
-                    collapseBtn.innerHTML = `
-                        <svg class="w-4 h-4 transform rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    `;
-                    collapseBtn.className = 'text-gray-400 hover:text-gray-600';
-                    h1Wrapper.appendChild(collapseBtn);
-
-                    // Create container for H2s - remove 'hidden' class to show by default
-                    currentH1List = document.createElement('ul');
-                    currentH1List.className = 'ml-4 mt-2 space-y-2';
-                    
-                    collapseBtn.addEventListener('click', () => {
-                        currentH1List.classList.toggle('hidden');
-                        collapseBtn.querySelector('svg').classList.toggle('rotate-180');
-                    });
-                }
-
-                container.appendChild(h1Wrapper);
-                if (currentH1List) {
-                    container.appendChild(currentH1List);
-                }
-                toc.appendChild(container);
-                currentH1Section = container;
-            } else if (heading.tagName === 'H2' && currentH1List) {
-                const li = document.createElement('li');
-                link.className += ' text-sm pl-2 border-l-2 border-gray-200';
-                li.appendChild(link);
-                currentH1List.appendChild(li);
-            }
-
-            // Add smooth scrolling
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 heading.scrollIntoView({ behavior: 'smooth' });
-                // Update URL without scrolling
-                history.pushState(null, null, link.href);
             });
+
+            tableOfContents.appendChild(link);
+            headingElements.push({ heading, link });
         });
 
-        // Highlight current section while scrolling
         const observerOptions = {
             root: null,
-            rootMargin: '0px',
-            threshold: 0.5
+            rootMargin: '-100px 0px -66%',
+            threshold: 0
         };
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                const id = entry.target.getAttribute('id');
-                const tocLink = toc.querySelector(`a[href="#${id}"]`);
+                const id = entry.target.id;
+                const tocLink = document.querySelector(`#table-of-contents a[data-target="${id}"]`);
                 
                 if (entry.isIntersecting) {
-                    // Remove all active states
-                    toc.querySelectorAll('a').forEach(link => {
+                    document.querySelectorAll('#table-of-contents a').forEach(link => {
                         link.classList.remove('text-blue-600');
+                        link.classList.add('text-gray-600');
                     });
-                    // Add active state
+                    
+                    tocLink.classList.remove('text-gray-600');
                     tocLink.classList.add('text-blue-600');
                 }
             });
         }, observerOptions);
 
-        headings.forEach(heading => observer.observe(heading));
+        headingElements.forEach(({ heading }) => {
+            observer.observe(heading);
+        });
     });
+
+    function copyToClipboard() {
+        const el = document.createElement('textarea');
+        el.value = window.location.href;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        
+        alert('Link copied to clipboard!');
+    }
 </script>
 @endpush
 
@@ -382,7 +334,6 @@
         @apply mb-0;
     }
 
-    /* Add these new styles */
     @media (min-width: 1024px) {
         .sticky {
             position: sticky;
