@@ -62,9 +62,9 @@ Route::middleware('web')->group(function () {
         // Move admin routes inside this group
         Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-            // Add other admin routes here
-            Route::resource('categories', CategoryController::class);
-            Route::resource('posts', PostController::class);
+            // Update to use the correct namespace for CategoryController
+            Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class);
+            Route::resource('posts', \App\Http\Controllers\Admin\PostController::class);
             // ... any other admin routes
         });
 
