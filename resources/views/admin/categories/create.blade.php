@@ -43,28 +43,11 @@
                                        name="slug" 
                                        id="slug" 
                                        value="{{ old('slug') }}"
-                                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md bg-gray-50" 
-                                       readonly>
+                                       class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" 
+                                       required>
                             </div>
-                            <p class="mt-2 text-sm text-gray-500">URL-friendly version of the name. This is auto-generated.</p>
+                            <p class="mt-2 text-sm text-gray-500">URL-friendly version of the name. Use lowercase letters, numbers, and hyphens only.</p>
                             @error('slug')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        {{-- Color --}}
-                        <div class="sm:col-span-2">
-                            <label for="color" class="block text-sm font-medium text-gray-700">
-                                Color
-                            </label>
-                            <div class="mt-1">
-                                <input type="color" 
-                                       name="color" 
-                                       id="color" 
-                                       value="{{ old('color', '#000000') }}"
-                                       class="h-9 p-0 block w-full border-gray-300 rounded-md">
-                            </div>
-                            @error('color')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
@@ -85,28 +68,6 @@
                             @enderror
                         </div>
 
-                        {{-- Icon --}}
-                        <div class="sm:col-span-4">
-                            <label for="icon" class="block text-sm font-medium text-gray-700">
-                                Icon
-                            </label>
-                            <div class="mt-1">
-                                <select name="icon" 
-                                        id="icon" 
-                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                    <option value="">Select an icon</option>
-                                    @foreach($icons as $value => $label)
-                                        <option value="{{ $value }}" {{ old('icon') === $value ? 'selected' : '' }}>
-                                            {{ $label }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            @error('icon')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
                         {{-- Image Upload --}}
                         <div class="sm:col-span-6">
                             <label class="block text-sm font-medium text-gray-700">
@@ -118,7 +79,7 @@
                                         <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     </svg>
                                     <div class="flex text-sm text-gray-600">
-                                        <label for="image" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                        <label for="image" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                             <span>Upload a file</span>
                                             <input id="image" name="image" type="file" class="sr-only" accept="image/*">
                                         </label>

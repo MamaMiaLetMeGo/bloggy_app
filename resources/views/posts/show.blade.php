@@ -9,7 +9,7 @@
 @endsection
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
     {{-- Main content and sidebar --}}
     <div class="flex flex-col lg:flex-row lg:space-x-8">
         <!-- Main Content -->
@@ -26,7 +26,10 @@
                     </div>
                 @endcan
             @endauth
-            <div class="p-8">
+            <div class="pt-4 px-6 pb-6">
+                {{-- Title --}}
+                <h1 class="text-4xl font-bold text-gray-900 mb-3">{{ $post->title }}</h1>
+
                 {{-- Breadcrumb and Category Info --}}
                 @if($post->breadcrumb || $post->categories->isNotEmpty())
                     <div class="mb-8">
@@ -45,9 +48,7 @@
                     </div>
                 @endif
 
-                {{-- Title and Meta --}}
-                <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ $post->title }}</h1>
-                
+                {{-- Author and Meta --}}
                 <div class="flex items-center space-x-4 mb-8">
                     <a href="{{ $post->author->author_url }}" class="flex items-center text-gray-700 !no-underline hover:!underline group">
                         <img 
