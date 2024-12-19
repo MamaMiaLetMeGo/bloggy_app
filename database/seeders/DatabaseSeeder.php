@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminUserSeeder::class,
             CategorySeeder::class,
+            PostSeeder::class,
         ]);
 
         // Only create test users if we're in development
