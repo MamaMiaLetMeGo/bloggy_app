@@ -247,4 +247,9 @@ class User extends Authenticatable
     {
         return $this->two_factor_enabled && $this->two_factor_confirmed_at !== null;
     }
+
+    public function isTwoFactorComplete()
+    {
+        return !$this->two_factor_enabled || session()->has('2fa.confirmed');
+    }
 }

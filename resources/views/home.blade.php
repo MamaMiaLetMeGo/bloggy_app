@@ -21,7 +21,7 @@
                 <p class="mt-6 max-w-md mx-auto text-xl text-gray-200 sm:max-w-3xl">
                     Writing feels good.
                 </p>
-                @auth
+                @if (Auth::check() && Auth::user()->isAdmin())
                     <div class="mt-8">
                         <a href="{{ route('admin.posts.create') }}" 
                            class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-blue-600/90 hover:bg-blue-700 transition-colors duration-300"
@@ -32,7 +32,7 @@
                             Create New Post
                         </a>
                     </div>
-                @endauth
+                @endif
             </div>
         </div>
     </div>
