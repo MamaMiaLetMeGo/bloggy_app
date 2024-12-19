@@ -29,11 +29,7 @@ class TwoFactorAuthentication
             !$request->is('2fa*') && 
             !$request->is('logout')
         ) {
-            // Store the intended URL only if it's not already set and it's not an asset
-            if (!session()->has('url.intended') && !str_contains($request->path(), 'images/')) {
-                session(['url.intended' => $request->fullUrl()]);
-            }
-            
+            // Redirect to 2FA challenge
             return redirect()->route('2fa.challenge');
         }
 
