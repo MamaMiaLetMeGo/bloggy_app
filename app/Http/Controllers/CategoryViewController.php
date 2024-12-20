@@ -34,15 +34,37 @@ class CategoryViewController extends Controller
        return view('categories.index', compact('categories'));
    }
 
-   public function show(Category $category)
+   public function show(Category $category, Request $request)
    {
-       $posts = $category->posts()
+       $sort = $request->query('sort', 'most-liked'); // Default to most-liked
+
+       $query = $category->posts()
            ->with(['author', 'categories'])
-           ->published()
-           ->latest('published_date')
-           ->paginate(9);
-       
+           ->withCount(['likes', 'comments'])
+           ->published();
+
+       // Apply sorting
+       switch ($sort) {
+           case 'most-liked':
+               $query->orderByDesc('likes_count');
+               break;
+           case 'most-commented':
+               $query->orderByDesc('comments_count');
+               break;
+           case 'oldest':
+               $query->orderBy('published_date');
+               break;
+           case 'newest':
+               $query->orderByDesc('published_date');
+               break;
+           default:
+               $query->orderByDesc('likes_count');
+       }
+
+       $posts = $query->paginate(9);
        $recentPosts = $category->posts()
+           ->with('author')
+           ->withCount('likes')
            ->published()
            ->latest('published_date')
            ->take(10)
@@ -59,7 +81,13 @@ class CategoryViewController extends Controller
            ->limit(5)
            ->get();
        
-       return view('categories.show', compact('category', 'posts', 'relatedCategories', 'recentPosts'));
+       return view('categories.show', [
+           'category' => $category,
+           'posts' => $posts,
+           'relatedCategories' => $relatedCategories,
+           'recentPosts' => $recentPosts,
+           'currentSort' => $sort
+       ]);
    }
 
    public function search(Request $request)
