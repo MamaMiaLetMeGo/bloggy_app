@@ -82,13 +82,18 @@
                             <select 
                                 id="sort-filter"
                                 class="bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                onchange="window.location.href = '{{ route('categories.show', $category) }}?sort=' + this.value"
+                                onchange="window.location.href = this.value"
                             >
-                                <option value="most-liked" {{ $currentSort === 'most-liked' ? 'selected' : '' }}>Most Liked</option>
-                                <option value="most-commented" {{ $currentSort === 'most-commented' ? 'selected' : '' }}>Most Commented</option>
-                                <option value="newest" {{ $currentSort === 'newest' ? 'selected' : '' }}>Newest First</option>
-                                <option value="oldest" {{ $currentSort === 'oldest' ? 'selected' : '' }}>Oldest First</option>
+                                <option value="{{ route('categories.show', ['category' => $category->slug, 'sort' => 'likes']) }}" {{ $currentSort === 'likes' ? 'selected' : '' }}>Most Liked</option>
+                                <option value="{{ route('categories.show', ['category' => $category->slug, 'sort' => 'comments']) }}" {{ $currentSort === 'comments' ? 'selected' : '' }}>Most Commented</option>
+                                <option value="{{ route('categories.show', ['category' => $category->slug, 'sort' => 'newest']) }}" {{ $currentSort === 'newest' ? 'selected' : '' }}>Newest First</option>
+                                <option value="{{ route('categories.show', ['category' => $category->slug, 'sort' => 'oldest']) }}" {{ $currentSort === 'oldest' ? 'selected' : '' }}>Oldest First</option>
                             </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                </svg>
+                            </div>
                         </div>
                     </div>
 
@@ -166,7 +171,21 @@
                                                 {{ $post->title }}
                                             </h3>
                                             <p class="text-xs text-gray-500 mt-1">
-                                                {{ $post->published_date->format('M j, Y') }} • {{ $post->reading_time }} min read
+                                                {{ $post->published_date->format('M d, Y') }}
+                                                <span class="inline-flex items-center space-x-3 mt-1">
+                                                    <span class="flex items-center">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                        {{ $post->reading_time }} min
+                                                    </span>
+                                                    <span class="flex items-center">
+                                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                                        </svg>
+                                                        {{ $post->likes_count }}
+                                                    </span>
+                                                </span>
                                             </p>
                                         </div>
                                     </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class CategoryViewController extends Controller
 {
@@ -36,32 +37,54 @@ class CategoryViewController extends Controller
 
    public function show(Category $category, Request $request)
    {
-       $sort = $request->query('sort', 'most-liked'); // Default to most-liked
+       $sort = $request->query('sort', 'likes'); // Default to most-liked
 
+       // Start with base query
        $query = $category->posts()
            ->with(['author', 'categories'])
-           ->withCount(['likes', 'comments'])
            ->published();
 
        // Apply sorting
        switch ($sort) {
-           case 'most-liked':
-               $query->orderByDesc('likes_count');
+           case 'likes':
+               $query->withCount('likes')
+                   ->orderBy('likes_count', 'desc');
                break;
-           case 'most-commented':
-               $query->orderByDesc('comments_count');
+           case 'comments':
+               $query->withCount('comments')
+                   ->orderBy('comments_count', 'desc');
                break;
            case 'oldest':
-               $query->orderBy('published_date');
+               $query->orderBy('published_date', 'asc');
                break;
            case 'newest':
-               $query->orderByDesc('published_date');
+               $query->orderBy('published_date', 'desc');
                break;
            default:
-               $query->orderByDesc('likes_count');
+               $query->withCount('likes')
+                   ->orderBy('likes_count', 'desc');
        }
 
-       $posts = $query->paginate(9);
+       // Debug the query
+       \Log::info('Final query:', [
+           'sort' => $sort,
+           'sql' => $query->toSql(),
+           'bindings' => $query->getBindings()
+       ]);
+
+       $posts = $query->paginate(9)->withQueryString();
+
+       // Debug the results
+       \Log::info('Results:', [
+           'total' => $posts->total(),
+           'posts' => $posts->map(fn($post) => [
+               'id' => $post->id,
+               'title' => $post->title,
+               'likes_count' => $post->likes_count ?? 0,
+               'comments_count' => $post->comments_count ?? 0
+           ])
+       ]);
+
        $recentPosts = $category->posts()
            ->with('author')
            ->withCount('likes')
