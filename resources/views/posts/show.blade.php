@@ -15,26 +15,47 @@
         <!-- Main Content -->
         <article class="lg:w-3/4 bg-white rounded-lg shadow-lg overflow-hidden tinymce-content">
             <div class="pt-4 px-6 pb-6">
-                {{-- Title --}}
-                <h1 class="text-4xl font-bold text-gray-900 mb-3">{{ $post->title }}</h1>
-
                 {{-- Breadcrumb and Category Info --}}
                 @if($post->breadcrumb || $post->categories->isNotEmpty())
-                    <div class="mb-8">
+                    <div class="-ml-8 mb-6">
                         {{-- Breadcrumb --}}
-                        <nav class="text-sm text-gray-500 mb-4">
-                            <a href="{{ route('home') }}" class="hover:text-gray-700">Home</a>
-                            <span class="mx-2">/</span>
-                            @if($post->categories->isNotEmpty())
-                                <a href="{{ $post->categories->first()->url }}" class="hover:text-gray-700">
-                                    {{ $post->categories->first()->name }}
-                                </a>
-                                <span class="mx-2">/</span>
-                            @endif
-                            <span>{{ $post->title }}</span>
+                        <nav class="flex" aria-label="Breadcrumb">
+                            <ol style="list-style: none;" class="flex items-center space-x-1 md:space-x-3 m-0 p-0">
+                                <li class="inline-flex items-center">
+                                    <a href="{{ route('home') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600">
+                                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                        </svg>
+                                        Home
+                                    </a>
+                                </li>
+                                @if($post->categories->isNotEmpty())
+                                    <li aria-hidden="true">
+                                        <div class="flex items-center">
+                                            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            <a href="{{ $post->categories->first()->url }}" class="ml-1 text-sm font-medium text-gray-500 hover:text-blue-600 md:ml-2">
+                                                {{ $post->categories->first()->name }}
+                                            </a>
+                                        </div>
+                                    </li>
+                                @endif
+                                <li aria-hidden="true">
+                                    <div class="flex items-center">
+                                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">{{ $post->title }}</span>
+                                    </div>
+                                </li>
+                            </ol>
                         </nav>
                     </div>
                 @endif
+
+                {{-- Title --}}
+                <h1 class="text-4xl font-bold text-gray-900 mb-3">{{ $post->title }}</h1>
 
                 {{-- Author and Meta --}}
                 <div class="flex items-center space-x-4 mb-8">
