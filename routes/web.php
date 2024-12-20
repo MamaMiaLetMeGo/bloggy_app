@@ -37,6 +37,11 @@ Route::middleware('web')->group(function () {
     // Post likes (no auth required)
     Route::post('/posts/{post}/like', [PostLikeController::class, 'toggle'])->name('posts.like');
 
+    // Post comments
+    Route::get('/posts/{post}/comments', [CommentController::class, 'index'])->name('posts.comments');
+    Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('posts.comments.store');
+    Route::get('/posts/{post}/commenters', [CommentController::class, 'commenters'])->name('posts.commenters');
+
     // Fixed routes (non-dynamic segments)
     Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
     Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
