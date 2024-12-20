@@ -54,21 +54,40 @@ class PostSeeder extends Seeder
             }
 
             // Create the post
-            $title = $faker->unique()->sentence();
             $post = Post::create([
-                'title' => $title,
-                'slug' => Str::slug($title),
-                'author_id' => $author->id,
-                'breadcrumb' => $faker->sentence(3),
+                'title' => $faker->unique()->sentence(),
+                'slug' => Str::slug($faker->unique()->sentence()),
                 'body_content' => $bodyContent,
+                'reading_time' => rand(3, 15),
                 'status' => 'published',
                 'published_date' => Carbon::now()->subDays(rand(1, 30)),
+                'author_id' => $author->id,
             ]);
 
-            // Attach 1-2 random categories to the post
+            // Attach random categories (1-3)
             $post->categories()->attach(
-                $categories->random(rand(1, 2))->pluck('id')->toArray()
+                $categories->random(rand(1, 3))->pluck('id')->toArray()
             );
+
+            // Add random number of likes (0-50)
+            $numLikes = rand(0, 50);
+            for ($k = 0; $k < $numLikes; $k++) {
+                $post->likes()->create([
+                    'ip_address' => $faker->ipv4
+                ]);
+            }
+
+            // Add random number of comments (0-20)
+            $numComments = rand(0, 20);
+            for ($k = 0; $k < $numComments; $k++) {
+                $post->comments()->create([
+                    'author_name' => $faker->name,
+                    'author_email' => $faker->email,
+                    'content' => $faker->paragraph(rand(1, 3)),
+                    'is_approved' => true,
+                    'created_at' => Carbon::now()->subDays(rand(0, 30))->addHours(rand(1, 24))
+                ]);
+            }
         }
     }
 }
