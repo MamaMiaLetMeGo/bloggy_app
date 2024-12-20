@@ -103,25 +103,37 @@
                                     @endif
                                     
                                     <div class="p-6">
-                                        <h2 class="text-xl font-semibold mb-2 hover:text-blue-600">{{ $post->title }}</h2>
-                                        
-                                        <p class="text-gray-600 mb-4">
-                                            {{ $post->excerpt ?? Str::limit(strip_tags($post->body_content), 100) }}
-                                        </p>
+                                        <h2 class="text-xl font-semibold mb-4 hover:text-blue-600">{{ $post->title }}</h2>
 
-                                        <div class="flex items-center text-sm text-gray-500">
-                                            <div class="flex items-center">
-                                                <img src="{{ $post->author->profile_image_url ?? 'https://ui-avatars.com/api/?name='.urlencode($post->author->name) }}" 
-                                                     alt="{{ $post->author->name }}"
-                                                     class="w-6 h-6 rounded-full mr-2">
-                                                <span>{{ $post->author->name }}</span>
+                                        <div class="flex items-center mb-4">
+                                            <img src="{{ $post->author->profile_image_url ?? 'https://ui-avatars.com/api/?name='.urlencode($post->author->name) }}" 
+                                                 alt="{{ $post->author->name }}"
+                                                 class="w-8 h-8 rounded-full mr-3">
+                                            <div>
+                                                <div class="font-medium text-gray-900">{{ $post->author->name }}</div>
+                                                <div class="text-sm text-gray-500">{{ $post->published_date->format('M d, Y') }}</div>
                                             </div>
-                                            <span class="mx-2">•</span>
-                                            <span>{{ $post->published_date->format('M d, Y') }}</span>
-                                            @if($post->reading_time)
-                                                <span class="mx-2">•</span>
+                                        </div>
+
+                                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                            <div class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
                                                 <span>{{ $post->reading_time }} min read</span>
-                                            @endif
+                                            </div>
+                                            <div class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                                </svg>
+                                                <span>{{ $post->likes_count }}</span>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                                                </svg>
+                                                <span>{{ $post->comments()->count() }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </a>
