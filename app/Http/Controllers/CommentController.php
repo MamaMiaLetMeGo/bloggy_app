@@ -12,6 +12,41 @@ use App\Notifications\CommentMentionNotification;
 
 class CommentController extends Controller
 {
+    public function index(Post $post)
+    {
+        $sort = request('sort', 'newest');
+        $query = $post->comments()->where('is_approved', true);
+
+        // Apply sorting
+        switch ($sort) {
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'popular':
+                $query->withCount('likes')->orderByDesc('likes_count');
+                break;
+            case 'newest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        // Get comments with nested replies
+        $comments = $query->whereNull('parent_id')
+            ->with(['replies' => function ($query) {
+                $query->where('is_approved', true)
+                    ->orderBy('created_at', 'asc');
+            }])
+            ->paginate(10);
+
+        return response()->json([
+            'data' => $comments->items(),
+            'current_page' => $comments->currentPage(),
+            'last_page' => $comments->lastPage(),
+            'total' => $comments->total()
+        ]);
+    }
+
     public function store(Request $request, Post $post)
     {
         if (Auth::check()) {
@@ -58,29 +93,6 @@ class CommentController extends Controller
         ]);
     }
 
-    public function index(Request $request, Post $post)
-    {
-        $sort = $request->input('sort', 'newest');
-        $query = $post->comments()->whereNull('parent_id'); // Get only top-level comments
-
-        switch ($sort) {
-            case 'oldest':
-                $query->oldest();
-                break;
-            case 'popular':
-                $query->orderBy('likes_count', 'desc');
-                break;
-            default:
-                $query->latest();
-                break;
-        }
-
-        // Load nested replies recursively
-        $comments = $query->with(['replies.replies', 'user'])->paginate(10);
-
-        return response()->json($comments);
-    }
-
     public function like(Comment $comment)
     {
         $userId = Auth::id();
@@ -120,15 +132,16 @@ class CommentController extends Controller
 
     public function commenters(Post $post)
     {
-        // Get unique commenters on this post
-        $commenters = Comment::where('post_id', $post->id)
-            ->select('author_name', 'user_id')
+        // Get unique commenters from approved comments
+        $commenters = $post->comments()
+            ->where('is_approved', true)
+            ->select('author_name', 'author_email')
             ->distinct()
             ->get()
-            ->map(function ($comment) {
+            ->map(function ($commenter) {
                 return [
-                    'name' => $comment->author_name,
-                    'id' => $comment->user_id
+                    'name' => $commenter->author_name,
+                    'email' => $commenter->author_email
                 ];
             });
 

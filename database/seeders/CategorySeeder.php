@@ -23,6 +23,18 @@ class CategorySeeder extends Seeder
                 'description' => 'Sailing journeys and maritime adventures',
                 'is_featured' => true,
             ],
+            [
+                'name' => 'Photography',
+                'slug' => 'photography',
+                'description' => 'Photography tips and amazing shots',
+                'is_featured' => true,
+            ],
+            [
+                'name' => 'Adventure',
+                'slug' => 'adventure',
+                'description' => 'Exciting adventures and outdoor activities',
+                'is_featured' => false,
+            ],
         ];
 
         foreach ($categories as $category) {

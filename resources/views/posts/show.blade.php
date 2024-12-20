@@ -14,18 +14,6 @@
     <div class="flex flex-col lg:flex-row lg:space-x-8">
         <!-- Main Content -->
         <article class="lg:w-3/4 bg-white rounded-lg shadow-lg overflow-hidden tinymce-content">
-            @auth
-                @can('update', $post)
-                    <div class="absolute top-4 right-4 space-x-2">
-                        <a 
-                            href="{{ route('admin.posts.edit', $post) }}" 
-                            class="inline-flex items-center px-4 py-2 bg-white bg-opacity-90 rounded-md text-sm font-medium text-gray-700 hover:bg-opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                            Edit Post
-                        </a>
-                    </div>
-                @endcan
-            @endauth
             <div class="pt-4 px-6 pb-6">
                 {{-- Title --}}
                 <h1 class="text-4xl font-bold text-gray-900 mb-3">{{ $post->title }}</h1>
@@ -69,12 +57,27 @@
                             @endif
                         </div>
                     </a>
-                    <div class="text-gray-500 text-sm flex items-center">
-                        <span class="mr-4">{{ $post->reading_time }} min read</span>
-                        <span class="mx-2">•</span>
+                    <div class="text-gray-500 text-sm flex items-center space-x-4">
+                        <span>{{ $post->reading_time }} min read</span>
                         <a href="#comments" class="text-gray-500 hover:text-blue-600">
                             {{ $post->comments()->count() }} {{ Str::plural('Comment', $post->comments()->count()) }}
                         </a>
+                        <button 
+                            type="button"
+                            class="like-button inline-flex items-center space-x-1"
+                            data-post-id="{{ $post->id }}"
+                            data-liked="{{ $post->isLikedByIp(request()->ip()) ? 'true' : 'false' }}"
+                        >
+                            <svg class="w-5 h-5 transition-colors duration-200 {{ $post->isLikedByIp(request()->ip()) ? 'text-red-600' : 'text-gray-400' }}"
+                                 xmlns="http://www.w3.org/2000/svg" 
+                                 fill="currentColor" 
+                                 viewBox="0 0 24 24"
+                                 stroke-width="2"
+                            >
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                            <span class="likes-count">{{ $post->likes_count }}</span>
+                        </button>
                     </div>
                 </div>
 
@@ -246,69 +249,78 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const article = document.querySelector('article');
-        const tableOfContents = document.getElementById('table-of-contents');
-        const headings = article.querySelectorAll('h1');
-        const headingElements = [];
-
-        headings.forEach((heading, index) => {
-            if (!heading.id) {
-                heading.id = `heading-${index}`;
-            }
-
-            const link = document.createElement('a');
-            link.href = `#${heading.id}`;
-            link.textContent = heading.textContent;
-            link.className = 'block text-gray-600 hover:text-blue-600 transition-colors duration-200';
-            link.dataset.target = heading.id;
-
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                heading.scrollIntoView({ behavior: 'smooth' });
-            });
-
-            tableOfContents.appendChild(link);
-            headingElements.push({ heading, link });
-        });
-
-        const observerOptions = {
-            root: null,
-            rootMargin: '-100px 0px -66%',
-            threshold: 0
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                const id = entry.target.id;
-                const tocLink = document.querySelector(`#table-of-contents a[data-target="${id}"]`);
+        const likeButtons = document.querySelectorAll('.like-button');
+        
+        likeButtons.forEach(button => {
+            button.addEventListener('click', async function() {
+                console.log('Like button clicked'); // Debug log
+                const postId = this.dataset.postId;
+                const isCurrentlyLiked = this.dataset.liked === 'true';
+                const likesCount = parseInt(this.querySelector('.likes-count').textContent) || 0;
                 
-                if (entry.isIntersecting) {
-                    document.querySelectorAll('#table-of-contents a').forEach(link => {
-                        link.classList.remove('text-blue-600');
-                        link.classList.add('text-gray-600');
+                // Debug logs
+                console.log('Current state:', {
+                    postId,
+                    isCurrentlyLiked,
+                    likesCount
+                });
+                
+                // Optimistically update UI
+                const heartIcon = this.querySelector('svg');
+                if (isCurrentlyLiked) {
+                    heartIcon.classList.remove('text-red-600');
+                    heartIcon.classList.add('text-gray-400');
+                    this.querySelector('.likes-count').textContent = likesCount - 1;
+                } else {
+                    heartIcon.classList.remove('text-gray-400');
+                    heartIcon.classList.add('text-red-600');
+                    this.querySelector('.likes-count').textContent = likesCount + 1;
+                }
+                this.dataset.liked = (!isCurrentlyLiked).toString();
+                
+                try {
+                    const response = await fetch(`/posts/${postId}/like`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                        },
                     });
                     
-                    tocLink.classList.remove('text-gray-600');
-                    tocLink.classList.add('text-blue-600');
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    
+                    const data = await response.json();
+                    console.log('Server response:', data); // Debug log
+                    
+                    // Update with server response
+                    if (data.isLiked) {
+                        heartIcon.classList.remove('text-gray-400');
+                        heartIcon.classList.add('text-red-600');
+                    } else {
+                        heartIcon.classList.remove('text-red-600');
+                        heartIcon.classList.add('text-gray-400');
+                    }
+                    this.querySelector('.likes-count').textContent = data.likesCount;
+                    this.dataset.liked = data.isLiked.toString();
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    // Revert optimistic update on error
+                    if (isCurrentlyLiked) {
+                        heartIcon.classList.add('text-red-600');
+                        heartIcon.classList.remove('text-gray-400');
+                    } else {
+                        heartIcon.classList.add('text-gray-400');
+                        heartIcon.classList.remove('text-red-600');
+                    }
+                    this.querySelector('.likes-count').textContent = likesCount;
+                    this.dataset.liked = isCurrentlyLiked.toString();
                 }
             });
-        }, observerOptions);
-
-        headingElements.forEach(({ heading }) => {
-            observer.observe(heading);
         });
     });
-
-    function copyToClipboard() {
-        const el = document.createElement('textarea');
-        el.value = window.location.href;
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
-        
-        alert('Link copied to clipboard!');
-    }
 </script>
 @endpush
 

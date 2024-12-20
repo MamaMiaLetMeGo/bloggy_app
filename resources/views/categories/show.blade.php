@@ -56,58 +56,42 @@
                 <div class="bg-white rounded-lg shadow-md p-6">
                     <div class="flex justify-between items-start mb-6">
                         <h1 class="text-3xl font-bold">{{ $category->name }}</h1>
-                        
-                        <!-- Admin Actions -->
-                        @auth
-                            @if(auth()->user()->is_admin)
-                                <div class="flex space-x-2">
-                                    <a href="{{ route('admin.categories.edit', $category) }}" 
-                                       class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                                        <svg class="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                                        </svg>
-                                        Edit
-                                    </a>
-                                    @if($category->posts_count === 0)
-                                        <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" 
-                                                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                                                    onclick="return confirm('Are you sure you want to delete this category?')">
-                                                <svg class="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                </svg>
-                                                Delete
-                                            </button>
-                                        </form>
-                                    @endif
-                                </div>
-                            @endif
-                        @endauth
+                        <div class="text-sm text-gray-500">
+                            {{ $posts->total() }} {{ Str::plural('post', $posts->total()) }} in this category
+                        </div>
                     </div>
 
                     @if($category->image)
                         <div class="mb-6">
                             <img src="{{ Storage::disk('public')->url($category->image) }}" 
                                  alt="{{ $category->name }}" 
-                                 class="w-full h-64 object-cover rounded-lg">
+                                 class="w-full h-48 object-cover rounded-lg">
                         </div>
                     @endif
 
                     @if($category->description)
-                        <div class="tinymce-content text-gray-600 mb-4">
+                        <div class="prose max-w-none mb-6">
                             {!! $category->description !!}
                         </div>
                     @endif
 
-                    <div class="text-sm text-gray-500">
-                        {{ $posts->total() }} {{ Str::plural('post', $posts->total()) }} in this category
+                    <!-- Posts Section Header with Filter -->
+                    <div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
+                        <h2 class="text-xl font-semibold text-gray-900">Latest Posts</h2>
+                        <div class="relative inline-block">
+                            <select 
+                                id="sort-filter"
+                                class="bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                onchange="window.location.href = '{{ route('categories.show', $category) }}?sort=' + this.value"
+                            >
+                                <option value="most-liked" {{ $currentSort === 'most-liked' ? 'selected' : '' }}>Most Liked</option>
+                                <option value="most-commented" {{ $currentSort === 'most-commented' ? 'selected' : '' }}>Most Commented</option>
+                                <option value="newest" {{ $currentSort === 'newest' ? 'selected' : '' }}>Newest First</option>
+                                <option value="oldest" {{ $currentSort === 'oldest' ? 'selected' : '' }}>Oldest First</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Posts Grid -->
-                <div class="mt-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         @forelse ($posts as $post)
                             <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
@@ -143,9 +127,8 @@
                                 </a>
                             </div>
                         @empty
-                            <div class="col-span-full text-center py-12">
-                                <h3 class="text-lg font-medium text-gray-900">No posts yet</h3>
-                                <p class="mt-2 text-sm text-gray-500">No posts have been published in this category.</p>
+                            <div class="col-span-3 text-center py-8">
+                                <p class="text-gray-500">No posts found in this category.</p>
                             </div>
                         @endforelse
                     </div>
@@ -189,13 +172,12 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Pagination -->
-    @if($posts->hasPages())
-        <div class="mt-8">
-            {{ $posts->links() }}
-        </div>
-    @endif
-</div>
+        <!-- Pagination -->
+        @if($posts->hasPages())
+            <div class="mt-8">
+                {{ $posts->links() }}
+            </div>
+        @endif
+    </div>
 @endsection
