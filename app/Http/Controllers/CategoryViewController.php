@@ -40,8 +40,14 @@ class CategoryViewController extends Controller
            ->with(['author', 'categories'])
            ->published()
            ->latest('published_date')
-           ->paginate(12);
+           ->paginate(9);
        
+       $recentPosts = $category->posts()
+           ->published()
+           ->latest('published_date')
+           ->take(10)
+           ->get();
+
        $relatedCategories = Category::whereHas('posts', function($query) use ($category) {
                $query->whereIn('posts.id', $category->posts->pluck('id'));
            })
@@ -53,7 +59,7 @@ class CategoryViewController extends Controller
            ->limit(5)
            ->get();
        
-       return view('categories.show', compact('category', 'posts', 'relatedCategories'));
+       return view('categories.show', compact('category', 'posts', 'relatedCategories', 'recentPosts'));
    }
 
    public function search(Request $request)

@@ -25,7 +25,6 @@ class CategoryUpdateRequest extends FormRequest
                 'mimes:jpeg,png,jpg,webp',
                 'max:2048', // 2MB max
             ],
-            'description' => ['nullable', 'string', 'max:1000'],
             'is_featured' => ['boolean'],
             'color' => ['nullable', 'string', 'max:7', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
             'icon' => ['nullable', 'string', 'max:50'],
