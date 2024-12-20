@@ -25,15 +25,9 @@
         <div class="lg:w-3/4">
             <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
                 <div class="p-6">
-                    <div class="flex justify-between items-start mb-6">
-                        <h1 class="text-3xl font-bold">{{ $category->name }}</h1>
-                        <div class="text-sm text-gray-500">
-                            {{ $posts->total() }} {{ Str::plural('post', $posts->total()) }} in this category
-                        </div>
-                    </div>
-
+                    {{-- Breadcrumb --}}
                     <nav class="flex mb-6" aria-label="Breadcrumb">
-                        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                        <ol style="list-style: none;" class="flex items-center space-x-1 md:space-x-3 m-0 p-0">
                             <li class="inline-flex items-center">
                                 <a href="{{ route('home') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600">
                                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -42,15 +36,7 @@
                                     Home
                                 </a>
                             </li>
-                            <li>
-                                <div class="flex items-center">
-                                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <a href="{{ route('categories.index') }}" class="ml-1 text-sm font-medium text-gray-500 hover:text-blue-600 md:ml-2">Categories</a>
-                                </div>
-                            </li>
-                            <li aria-current="page">
+                            <li aria-hidden="true">
                                 <div class="flex items-center">
                                     <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                         <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
@@ -60,6 +46,14 @@
                             </li>
                         </ol>
                     </nav>
+
+                    {{-- Title and Actions --}}
+                    <div class="flex justify-between items-start mb-6">
+                        <h1 class="text-3xl font-bold">{{ $category->name }}</h1>
+                        <div class="text-sm text-gray-500">
+                            {{ $posts->total() }} {{ Str::plural('post', $posts->total()) }} in this category
+                        </div>
+                    </div>
 
                     @if($category->image)
                         <div class="mb-6">
