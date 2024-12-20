@@ -15,6 +15,29 @@ class ContactController extends Controller
 
     public function submit(Request $request)
     {
+        // Check if it's a JSON request (chat interface)
+        if ($request->expectsJson()) {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+                'message' => 'nullable|string'
+            ]);
+
+            // Send email notification
+            Mail::to(config('mail.contact_email', config('mail.from.address')))
+                ->send(new ContactFormSubmission([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'message' => $validated['message'] ?? 'No message provided'
+                ]));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Contact information received successfully'
+            ]);
+        }
+
+        // Handle traditional form submission
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
@@ -28,4 +51,4 @@ class ContactController extends Controller
 
         return back()->with('success', 'Thank you for your message. I will get back to you soon!');
     }
-} 
+}
