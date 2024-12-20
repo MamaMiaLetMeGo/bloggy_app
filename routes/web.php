@@ -16,6 +16,8 @@ use App\Http\Controllers\TwoFactorAuthController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\PostLikeController; // Add this line
+
 Route::middleware('web')->group(function () {
     // Include auth and admin routes
     require __DIR__.'/auth.php';
@@ -31,6 +33,9 @@ Route::middleware('web')->group(function () {
 
         return view('home', compact('posts'));
     })->name('home');
+
+    // Post likes (no auth required)
+    Route::post('/posts/{post}/like', [PostLikeController::class, 'toggle'])->name('posts.like');
 
     // Fixed routes (non-dynamic segments)
     Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
@@ -55,6 +60,7 @@ Route::middleware('web')->group(function () {
             Route::get('/recovery', [TwoFactorChallengeController::class, 'showRecoveryForm'])->name('recovery');
             Route::post('/recovery', [TwoFactorChallengeController::class, 'recovery'])->name('recovery.store');
         });
+
     });
 
     // Protected routes that require 2FA
