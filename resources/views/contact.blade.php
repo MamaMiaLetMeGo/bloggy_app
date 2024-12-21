@@ -52,7 +52,7 @@
         <!-- Contact Form -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             <div class="p-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Send me a message</h2>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Quickly talk with my personal bot to get ahold of me.</h2>
 
                 @if(session('success'))
                     <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
@@ -60,53 +60,196 @@
                     </div>
                 @endif
 
-                <form action="{{ route('contact.submit') }}" method="POST" class="space-y-6">
-                    @csrf
-                    
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                        <input type="text" 
-                               name="name" 
-                               id="name" 
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                               required
-                        >
-                    </div>
-
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" 
-                               name="email" 
-                               id="email" 
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                               required
-                        >
-                    </div>
-
-                    <div>
-                        <label for="message" class="block text-sm font-medium text-gray-700">Message</label>
-                        <textarea name="message" 
-                                  id="message" 
-                                  rows="4" 
-                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                  required
-                        ></textarea>
-                    </div>
-
-                    <!-- Google reCAPTCHA -->
-                    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
-                    @error('g-recaptcha-response')
-                        <p class="text-red-500 text-sm">{{ $message }}</p>
-                    @enderror
-
-                    <div>
-                        <button type="submit" 
-                                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                            Send Message
+                <!-- Chat Interface -->
+                <div x-data="chatBot()" class="relative">
+                    <!-- Start Chat Overlay -->
+                    <div x-show="!chatStarted" 
+                         class="absolute inset-0 bg-blue-500/95 rounded-lg flex flex-col items-center justify-center space-y-4 z-10"
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-200"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95">
+                        <p class="text-white text-lg text-center px-4">Ready to chat? I'm here to help connect you with Charles.</p>
+                        <button @click="startChat" 
+                                class="px-6 py-3 bg-white text-blue-500 rounded-full font-semibold hover:bg-blue-50 transform transition hover:scale-105">
+                            Start Chat
                         </button>
                     </div>
-                </form>
+
+                    <!-- Chat Messages -->
+                    <div class="space-y-4 h-96 overflow-y-auto p-4 bg-gray-50 rounded-lg" id="chat-messages">
+                        <template x-for="message in messages" :key="message.id">
+                            <div :class="{'flex justify-end': message.type === 'user', 'flex justify-start': message.type === 'bot'}">
+                                <div :class="{
+                                    'bg-blue-500 text-white': message.type === 'user',
+                                    'bg-gray-200 text-gray-900': message.type === 'bot'
+                                }" class="max-w-[80%] rounded-lg px-4 py-2">
+                                    <p x-text="message.text"></p>
+                                </div>
+                            </div>
+                        </template>
+                        
+                        <!-- Loading indicator -->
+                        <template x-if="isTyping">
+                            <div class="flex justify-start">
+                                <div class="bg-gray-200 text-gray-900 max-w-[80%] rounded-lg px-4 py-2">
+                                    <div class="flex space-x-2">
+                                        <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                                        <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                        <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- User Input -->
+                    <div class="flex space-x-4">
+                        <input type="text" 
+                               x-model="userInput"
+                               @keyup.enter="handleUserInput"
+                               class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                               placeholder="Type your message..."
+                               :disabled="currentStep === 'complete' || isTyping"
+                        >
+                        <button @click="handleUserInput"
+                                :disabled="!userInput || currentStep === 'complete' || isTyping"
+                                class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                            Send
+                        </button>
+                    </div>
+                </div>
+
+                @push('scripts')
+                <script>
+                    function chatBot() {
+                        return {
+                            messages: [],
+                            userInput: '',
+                            currentStep: 'name',
+                            userName: '',
+                            userEmail: '',
+                            userMessage: '',
+                            isTyping: false,
+                            chatStarted: false,
+
+                            startChat() {
+                                this.chatStarted = true;
+                                this.messages = [
+                                    { id: 1, type: 'bot', text: 'Hi, what is your name?' }
+                                ];
+                                this.scrollToBottom();
+                            },
+                            
+                            async handleUserInput() {
+                                if (!this.userInput.trim() || this.isTyping) return;
+                                
+                                // Add user message
+                                this.messages.push({
+                                    id: this.messages.length + 1,
+                                    type: 'user',
+                                    text: this.userInput
+                                });
+
+                                // Show typing indicator
+                                this.isTyping = true;
+                                
+                                // Scroll to bottom
+                                this.scrollToBottom();
+                                
+                                // Simulate typing delay
+                                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                                // Process based on current step
+                                switch(this.currentStep) {
+                                    case 'name':
+                                        this.userName = this.userInput;
+                                        this.messages.push({
+                                            id: this.messages.length + 1,
+                                            type: 'bot',
+                                            text: `Thank you ${this.userName}, if you have a particular message for me, go ahead and write it now.`
+                                        });
+                                        this.currentStep = 'message';
+                                        break;
+
+                                    case 'message':
+                                        this.userMessage = this.userInput;
+                                        this.messages.push({
+                                            id: this.messages.length + 1,
+                                            type: 'bot',
+                                            text: `Thanks for sharing. Now, what's your email address so I can respond to you?`
+                                        });
+                                        this.currentStep = 'email';
+                                        break;
+                                        
+                                    case 'email':
+                                        // Email validation
+                                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                        if (!emailRegex.test(this.userInput)) {
+                                            this.messages.push({
+                                                id: this.messages.length + 1,
+                                                type: 'bot',
+                                                text: `Sorry, that doesn't look like a valid email address. Please enter a valid email address so I can respond to you.`
+                                            });
+                                            break;
+                                        }
+                                        
+                                        this.userEmail = this.userInput;
+                                        this.messages.push({
+                                            id: this.messages.length + 1,
+                                            type: 'bot',
+                                            text: `Perfect, I have received your message and will get back to you within 24 hours.`
+                                        });
+                                        this.currentStep = 'complete';
+                                        
+                                        // Submit the contact information
+                                        await this.submitContact();
+                                        break;
+                                }
+                                
+                                // Clear input and typing indicator
+                                this.userInput = '';
+                                this.isTyping = false;
+                                
+                                // Scroll to bottom
+                                this.scrollToBottom();
+                            },
+                            
+                            scrollToBottom() {
+                                setTimeout(() => {
+                                    const chatMessages = document.getElementById('chat-messages');
+                                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                                }, 100);
+                            },
+                            
+                            async submitContact() {
+                                try {
+                                    const response = await fetch('{{ route('contact.submit') }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                        },
+                                        body: JSON.stringify({
+                                            name: this.userName,
+                                            email: this.userEmail,
+                                            message: this.userMessage
+                                        })
+                                    });
+                                    
+                                    if (!response.ok) {
+                                        throw new Error('Failed to submit');
+                                    }
+                                } catch (error) {
+                                    console.error('Error submitting contact:', error);
+                                }
+                            }
+                        }
+                    }
+                </script>
+                @endpush
             </div>
         </div>
     </div>
