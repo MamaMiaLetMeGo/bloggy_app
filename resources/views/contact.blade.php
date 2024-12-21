@@ -262,7 +262,18 @@
                                         })
                                     });
 
-                                    if (!response.ok) throw new Error('Failed to submit contact form');
+                                    const data = await response.json();
+
+                                    if (!response.ok) {
+                                        if (data.type === 'duplicate') {
+                                            this.addBotMessage(data.message);
+                                            // Don't reset the chat for duplicate submissions
+                                            this.currentStep = 'complete';
+                                        } else {
+                                            throw new Error(data.message || 'Failed to submit contact form');
+                                        }
+                                        return;
+                                    }
 
                                     this.addBotMessage("Thanks for reaching out! Charles will get back to you soon at " + this.userEmail);
                                 } catch (error) {

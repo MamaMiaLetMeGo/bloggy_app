@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\ContactFormSubmission;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Config;
+use App\Models\ContactSubmission;
 
 class ContactController extends Controller
 {
@@ -56,6 +57,22 @@ class ContactController extends Controller
                     'message' => 'nullable|string'
                 ]);
 
+                // Check for recent submissions
+                if (ContactSubmission::hasRecentSubmission($validated['email'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You have already submitted a message in the last 24 hours. Please wait before sending another message.',
+                        'type' => 'duplicate'
+                    ], 429);
+                }
+
+                // Create contact submission record
+                ContactSubmission::create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'message' => $validated['message'] ?? 'No message provided'
+                ]);
+
                 // Send email notification
                 Mail::to($this->adminEmail)
                     ->send(new ContactFormSubmission([
@@ -76,6 +93,18 @@ class ContactController extends Controller
                 'email' => 'required|email|max:255',
                 'message' => 'required|string|min:10',
                 'g-recaptcha-response' => 'required|recaptcha',
+            ]);
+
+            // Check for recent submissions
+            if (ContactSubmission::hasRecentSubmission($validated['email'])) {
+                return back()->with('error', 'You have already submitted a message in the last 24 hours. Please wait before sending another message.');
+            }
+
+            // Create contact submission record
+            ContactSubmission::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'message' => $validated['message']
             ]);
 
             // Send email to admin
