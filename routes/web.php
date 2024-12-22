@@ -47,7 +47,8 @@ Route::middleware('web')->group(function () {
 
     // Fixed routes (non-dynamic segments)
     Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
-    Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
+    Route::post('/contact/submit', [ContactController::class, 'submit'])->name('contact.submit');
+    Route::get('/contact/verify', [ContactController::class, 'verify'])->name('contact.verify');
     Route::middleware(['web', 'auth'])->group(function () {
         Route::post('/contact/test-email', [ContactController::class, 'testEmail'])->name('contact.test-email');
     });
