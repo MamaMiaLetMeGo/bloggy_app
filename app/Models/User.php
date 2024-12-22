@@ -2,19 +2,28 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Traits\HasBlogPosts;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Sanctum\HasApiTokens;
+use App\Notifications\VerifyEmailNotification;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Traits\HasBlogPosts;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Post;
+use App\Models\Category;
+use App\Models\NewsletterSubscription;
+use App\Models\Comment;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable, HasBlogPosts;
+    use HasApiTokens, HasFactory, Notifiable, HasBlogPosts;
 
     /**
      * The attributes that are mass assignable.
@@ -251,5 +260,25 @@ class User extends Authenticatable
     public function isTwoFactorComplete()
     {
         return !$this->two_factor_enabled || session()->has('2fa.confirmed');
+    }
+
+    /**
+     * Send the email verification notification.
+     */
+    public function sendEmailVerificationNotification()
+    {
+        if (app()->environment('local')) {
+            $url = URL::temporarySignedRoute(
+                'verification.verify',
+                Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60)),
+                [
+                    'id' => $this->getKey(),
+                    'hash' => sha1($this->getEmailForVerification()),
+                ]
+            );
+            Log::info('Email verification URL for user ' . $this->email . ':', ['url' => $url]);
+        } else {
+            $this->notify(new VerifyEmailNotification);
+        }
     }
 }
