@@ -72,7 +72,7 @@
                          x-transition:leave-start="opacity-100 scale-100"
                          x-transition:leave-end="opacity-0 scale-95">
                         <p class="text-white text-lg text-center px-4">Ready to chat? I'm here to help connect you with Charles.</p>
-                        <button @click="startChat" 
+                        <button @click="startChat()" 
                                 class="px-6 py-3 bg-white text-blue-500 rounded-full font-semibold hover:bg-blue-50 transform transition hover:scale-105">
                             Start Chat
                         </button>
@@ -80,7 +80,7 @@
                         @auth
                             @if(auth()->user()->is_admin)
                                 <div class="flex justify-center mt-4">
-                                    <button @click="testEmail" 
+                                    <button @click="testEmail()" 
                                             class="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30"
                                             :class="{ 'opacity-50 cursor-not-allowed': isTestingEmail }"
                                             :disabled="isTestingEmail"
@@ -105,29 +105,27 @@
                         </template>
                         
                         <!-- Loading indicator -->
-                        <template x-if="isTyping">
-                            <div class="flex justify-start">
-                                <div class="bg-gray-200 text-gray-900 max-w-[80%] rounded-lg px-4 py-2">
-                                    <div class="flex space-x-2">
-                                        <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                                        <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                                        <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
-                                    </div>
+                        <div x-show="isTyping" class="flex justify-start">
+                            <div class="bg-gray-200 text-gray-900 max-w-[80%] rounded-lg px-4 py-2">
+                                <div class="flex space-x-2">
+                                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
                                 </div>
                             </div>
-                        </template>
+                        </div>
                     </div>
 
                     <!-- User Input -->
                     <div class="mt-4 flex space-x-4">
                         <input type="text" 
                                x-model="userInput"
-                               @keyup.enter="handleUserInput"
+                               @keyup.enter="handleUserInput()"
                                class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                placeholder="Type your message..."
                                :disabled="currentStep === 'complete' || isTyping"
                         >
-                        <button @click="handleUserInput"
+                        <button @click="handleUserInput()"
                                 :disabled="!userInput || currentStep === 'complete' || isTyping"
                                 class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">
                             Send
@@ -136,87 +134,50 @@
                 </div>
 
                 @push('scripts')
+                <script src="https://www.google.com/recaptcha/api.js" async defer></script>
                 <script>
                     function chatBot() {
                         return {
                             messages: [],
                             userInput: '',
-                            currentStep: 'name',
-                            userName: '',
-                            userEmail: '',
+                            currentStep: @auth 'message' @else 'name' @endauth,
+                            userName: @auth '{{ auth()->user()->name }}' @else '' @endauth,
+                            userEmail: @auth '{{ auth()->user()->email }}' @else '' @endauth,
                             userMessage: '',
-                            isTyping: false,
                             chatStarted: false,
+                            isTyping: false,
                             isTestingEmail: false,
                             testEmailStatus: null,
 
                             startChat() {
                                 this.chatStarted = true;
-                                this.addBotMessage("Hi, my name is Charles, but most know me as Charlie. What's your name?");
-                            },
-
-                            async testEmail() {
-                                if (this.isTestingEmail) return;
-                                
-                                this.isTestingEmail = true;
-                                this.testEmailStatus = 'Sending test email...';
-                                
-                                try {
-                                    const response = await fetch('{{ route('contact.test-email') }}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Accept': 'application/json',
-                                            'Content-Type': 'application/json',
-                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                                        }
-                                    });
-                                    
-                                    let data;
-                                    const contentType = response.headers.get('content-type');
-                                    if (contentType && contentType.includes('application/json')) {
-                                        data = await response.json();
+                                setTimeout(() => {
+                                    if (this.currentStep === 'name') {
+                                        this.typeMessage("Hi! I'm Charlie's assistant. What's your name?");
                                     } else {
-                                        throw new Error('Server returned non-JSON response');
+                                        this.typeMessage(`Hi ${this.userName}! I'm Charlie's assistant. What would you like to say to Charlie?`);
                                     }
-                                    
-                                    if (!response.ok) {
-                                        throw new Error(data.message || 'Failed to send test email');
-                                    }
-                                    
-                                    this.testEmailStatus = 'Test email sent!';
-                                    setTimeout(() => {
-                                        this.testEmailStatus = null;
-                                    }, 3000);
-                                } catch (error) {
-                                    console.error('Error sending test email:', error);
-                                    this.testEmailStatus = error.message;
-                                    setTimeout(() => {
-                                        this.testEmailStatus = null;
-                                    }, 3000);
-                                } finally {
-                                    this.isTestingEmail = false;
-                                }
+                                }, 500);
                             },
 
                             addMessage(text, type = 'bot') {
                                 this.messages.push({
                                     id: Date.now(),
-                                    text: text,
-                                    type: type
+                                    text,
+                                    type
                                 });
-                                
                                 this.$nextTick(() => {
                                     const container = document.getElementById('chat-messages');
-                                    container.scrollTop = container.scrollHeight;
+                                    if (container) container.scrollTop = container.scrollHeight;
                                 });
                             },
 
-                            addBotMessage(text, delay = 1000) {
+                            typeMessage(text) {
                                 this.isTyping = true;
                                 setTimeout(() => {
-                                    this.isTyping = false;
                                     this.addMessage(text, 'bot');
-                                }, delay);
+                                    this.isTyping = false;
+                                }, 1000);
                             },
 
                             handleUserInput() {
@@ -226,74 +187,91 @@
                                 this.addMessage(userMessage, 'user');
                                 this.userInput = '';
 
-                                switch (this.currentStep) {
-                                    case 'name':
-                                        this.userName = userMessage;
-                                        this.currentStep = 'message';
-                                        this.addBotMessage(`Thanks for sharing your name, ${this.userName}! Now, if you wish, please leave a detailed message... (optional)`);
-                                        break;
-
-                                    case 'message':
-                                        this.userMessage = userMessage;
-                                        this.currentStep = 'email';
-                                        this.addBotMessage("Great! What's your email address so I can get back to you?");
-                                        break;
-
-                                    case 'email':
-                                        // Validate email format
-                                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                                        if (!emailRegex.test(userMessage)) {
-                                            this.addBotMessage("That doesn't look like a valid email address. Please enter a valid email address so I can get back to you.");
-                                            return;
-                                        }
-
-                                        this.userEmail = userMessage;
-                                        this.currentStep = 'complete';
-                                        this.submitContact();
-                                        break;
+                                if (this.currentStep === 'name') {
+                                    this.userName = userMessage;
+                                    this.currentStep = 'email';
+                                    this.typeMessage("Great to meet you, " + this.userName + "! What's your email address?");
+                                } else if (this.currentStep === 'email') {
+                                    if (!this.isValidEmail(userMessage)) {
+                                        this.typeMessage("That doesn't look like a valid email address. Please try again.");
+                                        return;
+                                    }
+                                    this.userEmail = userMessage;
+                                    this.currentStep = 'message';
+                                    this.typeMessage("Perfect! Now, what would you like to say to Charlie?");
+                                } else if (this.currentStep === 'message') {
+                                    this.userMessage = userMessage;
+                                    this.currentStep = 'complete';
+                                    this.submitContact();
                                 }
+                            },
+
+                            isValidEmail(email) {
+                                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                return re.test(email);
                             },
 
                             async submitContact() {
                                 try {
-                                    const formData = {
-                                        name: this.userName,
-                                        email: this.userEmail,
-                                        message: this.userMessage || 'No message provided'
-                                    };
-                                    
-                                    console.log('Submitting contact form:', formData);
-                                    
-                                    const response = await fetch('{{ url('/contact/submit') }}', {
+                                    const response = await fetch('/contact/submit', {
                                         method: 'POST',
                                         headers: {
                                             'Content-Type': 'application/json',
-                                            'Accept': 'application/json',
                                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                                         },
-                                        body: JSON.stringify(formData)
+                                        body: JSON.stringify({
+                                            name: this.userName,
+                                            email: this.userEmail,
+                                            message: this.userMessage
+                                        })
                                     });
 
                                     const data = await response.json();
-                                    console.log('Server response:', data);
 
-                                    if (!response.ok) {
-                                        if (data.errors) {
-                                            const errorMessages = Object.values(data.errors).flat().join('\n');
-                                            throw new Error(errorMessages);
-                                        }
-                                        throw new Error(data.message || 'Network response was not ok');
+                                    if (response.ok) {
+                                        this.typeMessage("Thanks for your message! I've sent you a verification email. Please check your inbox and click the verification link to complete the process.");
+                                    } else {
+                                        throw new Error(data.message || 'Something went wrong');
                                     }
-
-                                    this.addBotMessage(data.message || `Thanks for reaching out! I've sent a verification email to ${this.userEmail}. Please check your email and click the verification link to confirm your information. This helps prevent spam and ensures I can get back to you.
-
-Here's a summary of what you shared:
-• Name: ${this.userName}
-• Email: ${this.userEmail}
-${this.userMessage ? `• Message: ${this.userMessage}` : ''}`);
                                 } catch (error) {
-                                    console.error('Form submission error:', error);
-                                    this.addBotMessage(error.message || "Sorry, there was a problem sending your message. Please try again later.");
+                                    this.typeMessage("Sorry, there was an error sending your message. Please try again later.");
+                                    console.error('Error:', error);
+                                }
+                            },
+
+                            async testEmail() {
+                                if (this.isTestingEmail) return;
+                                
+                                this.isTestingEmail = true;
+                                this.testEmailStatus = 'Sending...';
+                                
+                                try {
+                                    const response = await fetch('/contact/test-email', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                        }
+                                    });
+                                    
+                                    const data = await response.json();
+                                    
+                                    if (response.ok) {
+                                        this.testEmailStatus = 'Email Sent!';
+                                        setTimeout(() => {
+                                            this.testEmailStatus = null;
+                                        }, 3000);
+                                    } else {
+                                        throw new Error(data.message);
+                                    }
+                                } catch (error) {
+                                    this.testEmailStatus = 'Failed';
+                                    console.error('Error:', error);
+                                    setTimeout(() => {
+                                        this.testEmailStatus = null;
+                                    }, 3000);
+                                } finally {
+                                    this.isTestingEmail = false;
                                 }
                             }
                         }
@@ -304,9 +282,5 @@ ${this.userMessage ? `• Message: ${this.userMessage}` : ''}`);
         </div>
     </div>
 </div>
-
-@push('scripts')
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
-@endpush
 
 @endsection

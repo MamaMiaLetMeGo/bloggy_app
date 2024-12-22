@@ -17,7 +17,8 @@ class ContactController extends Controller
 
     public function show()
     {
-        return view('contact');
+        $user = auth()->user();
+        return view('contact', compact('user'));
     }
 
     public function testEmail(Request $request)
