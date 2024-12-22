@@ -23,7 +23,7 @@
                         <div class="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
                             <div>
                                 <div class="flex text-sm">
-                                    <a href="{{ route('categories.show', $category->slug) }}" 
+                                    <a href="{{ route('categories.slug.show', $category->slug) }}" 
                                        class="font-medium text-blue-600 truncate hover:text-blue-800 hover:underline">
                                         {{ $category->name }}
                                     </a>

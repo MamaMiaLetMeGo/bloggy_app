@@ -20,7 +20,7 @@
                     @inject('categories', 'App\Models\Category')
                     @foreach($categories::withCount('posts')->orderByDesc('posts_count')->take(3)->get() as $category)
                         <li>
-                            <a href="{{ route('categories.show', $category) }}" class="text-base text-gray-500 hover:text-gray-900">
+                            <a href="{{ route('categories.slug.show', $category) }}" class="text-base text-gray-500 hover:text-gray-900">
                                 {{ $category->name }}
                             </a>
                         </li>
@@ -57,7 +57,7 @@
 
         <div class="mt-8 border-t border-gray-200 pt-8">
             <p class="text-base text-gray-400 text-center">
-                © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
+                {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
             </p>
         </div>
     </div>

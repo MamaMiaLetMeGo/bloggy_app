@@ -52,7 +52,7 @@
         @forelse ($categories as $category)
             <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition duration-300">
                 @if($category->image)
-                    <a href="{{ route('categories.show', $category->slug) }}" class="block mb-4">
+                    <a href="{{ route('categories.slug.show', $category->slug) }}" class="block mb-4">
                         <img src="{{ Storage::disk('public')->url($category->image) }}" 
                              alt="{{ $category->name }}" 
                              class="w-full h-48 object-cover rounded-md hover:opacity-90 transition duration-300">
@@ -60,7 +60,7 @@
                 @endif
                 
                 <div class="flex justify-between items-start mb-4">
-                    <a href="{{ route('categories.show', $category->slug) }}" 
+                    <a href="{{ route('categories.slug.show', $category->slug) }}" 
                        class="text-xl font-semibold hover:text-blue-600 transition duration-300">
                         {{ $category->name }}
                     </a>

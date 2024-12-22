@@ -80,10 +80,10 @@
                         class="bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-8 text-sm text-gray-700 cursor-pointer hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         onchange="window.location.href = this.value"
                     >
-                        <option value="{{ route('categories.show', ['category' => $category->slug, 'sort' => 'likes']) }}" {{ $currentSort === 'likes' ? 'selected' : '' }}>Most Liked</option>
-                        <option value="{{ route('categories.show', ['category' => $category->slug, 'sort' => 'comments']) }}" {{ $currentSort === 'comments' ? 'selected' : '' }}>Most Commented</option>
-                        <option value="{{ route('categories.show', ['category' => $category->slug, 'sort' => 'newest']) }}" {{ $currentSort === 'newest' ? 'selected' : '' }}>Newest First</option>
-                        <option value="{{ route('categories.show', ['category' => $category->slug, 'sort' => 'oldest']) }}" {{ $currentSort === 'oldest' ? 'selected' : '' }}>Oldest First</option>
+                        <option value="{{ route('categories.slug.show', ['category' => $category->slug, 'sort' => 'likes']) }}" {{ $currentSort === 'likes' ? 'selected' : '' }}>Most Liked</option>
+                        <option value="{{ route('categories.slug.show', ['category' => $category->slug, 'sort' => 'comments']) }}" {{ $currentSort === 'comments' ? 'selected' : '' }}>Most Commented</option>
+                        <option value="{{ route('categories.slug.show', ['category' => $category->slug, 'sort' => 'newest']) }}" {{ $currentSort === 'newest' ? 'selected' : '' }}>Newest First</option>
+                        <option value="{{ route('categories.slug.show', ['category' => $category->slug, 'sort' => 'oldest']) }}" {{ $currentSort === 'oldest' ? 'selected' : '' }}>Oldest First</option>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                         <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">

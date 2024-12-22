@@ -30,7 +30,7 @@
                             @if($posts->first()->categories->isNotEmpty())
                                 <div class="flex items-center space-x-2 mb-4">
                                     @foreach($posts->first()->categories as $category)
-                                        <a href="{{ route('categories.show', $category) }}" 
+                                        <a href="{{ route('categories.slug.show', $category) }}" 
                                            class="text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1 rounded-full transition-colors">
                                             {{ $category->name }}
                                         </a>
@@ -133,7 +133,7 @@
                         @if($post->categories->isNotEmpty())
                             <div class="flex items-center space-x-2 mb-4">
                                 @foreach($post->categories as $category)
-                                    <a href="{{ route('categories.show', $category) }}" 
+                                    <a href="{{ route('categories.slug.show', $category) }}" 
                                        class="text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1 rounded-full transition-colors">
                                         {{ $category->name }}
                                     </a>

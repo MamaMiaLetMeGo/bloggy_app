@@ -85,7 +85,7 @@ class Category extends Model
      */
     public function getUrlAttribute(): string
     {
-        return route('categories.show', $this->slug);
+        return route('categories.slug.show', $this->slug);
     }
 
     /**
