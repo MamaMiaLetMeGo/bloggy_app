@@ -37,6 +37,9 @@ Route::middleware('web')->group(function () {
         return view('home', compact('posts'));
     })->name('home');
 
+    // Post routes (public)
+    Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
+
     // Post likes (no auth required)
     Route::post('/posts/{post}/like', [PostLikeController::class, 'toggle'])->name('posts.like');
 
