@@ -8,6 +8,7 @@ class NewsletterSubscription extends Model
 {
     protected $fillable = [
         'user_id',
+        'email',
         'travel_updates',
         'sailing_updates',
     ];
@@ -15,6 +16,7 @@ class NewsletterSubscription extends Model
     protected $casts = [
         'travel_updates' => 'boolean',
         'sailing_updates' => 'boolean',
+        'verified_at' => 'datetime',
     ];
 
     public function user()

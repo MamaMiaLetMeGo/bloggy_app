@@ -68,6 +68,22 @@ class NewsletterController extends Controller
         ]);
     }
 
+    public function subscribeEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|unique:newsletter_subscriptions,email'
+        ]);
+
+        $subscription = NewsletterSubscription::create([
+            'email' => $request->email,
+            'user_id' => auth()->id(),  // Will be null for guests
+        ]);
+
+        return response()->json([
+            'message' => 'Thank you for subscribing! Please check your email to confirm your subscription.'
+        ]);
+    }
+
     public function unsubscribe()
     {
         NewsletterSubscription::where('user_id', auth()->id())->delete();
