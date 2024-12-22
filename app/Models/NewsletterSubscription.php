@@ -9,6 +9,7 @@ class NewsletterSubscription extends Model
     protected $fillable = [
         'user_id',
         'email',
+        'verified_at',
         'travel_updates',
         'sailing_updates',
     ];

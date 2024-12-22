@@ -93,7 +93,7 @@
                             <h3 class="text-xl font-bold text-gray-900 mb-2">Never Miss a Post</h3>
                             <p class="text-gray-700 text-sm mb-4">Join our newsletter and stay updated with the latest content</p>
                             
-                            <form id="newsletter-form" class="space-y-3">
+                            <form id="newsletter-form" method="POST" action="{{ route('newsletter.subscribe') }}" class="space-y-3">
                                 @csrf
                                 <div class="relative">
                                     <input type="email" 
@@ -218,7 +218,7 @@
             e.preventDefault();
             
             const form = e.target;
-            const email = form.querySelector('input[name="email"]').value;
+            const formData = new FormData(form);
             const errorDiv = document.getElementById('newsletter-error');
             const successDiv = document.getElementById('newsletter-success');
             const submitButton = form.querySelector('button[type="submit"]');
@@ -231,14 +231,19 @@
                 submitButton.disabled = true;
                 submitButton.innerHTML = 'Subscribing...';
                 
-                const response = await fetch('{{ route('newsletter.subscribe') }}', {
+                const response = await fetch(form.action, {
                     method: 'POST',
+                    credentials: 'same-origin', 
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({ email })
+                    body: formData
                 });
+                
+                if (response.status === 401) {
+                    throw new Error('Please refresh the page and try again.');
+                }
                 
                 const data = await response.json();
                 
@@ -247,7 +252,8 @@
                     successDiv.classList.remove('hidden');
                     form.reset();
                 } else {
-                    throw new Error(data.message || 'Failed to subscribe. Please try again.');
+                    const errors = data.errors || { email: [data.message || 'Failed to subscribe. Please try again.'] };
+                    throw new Error(errors.email?.[0] || 'Failed to subscribe. Please try again.');
                 }
             } catch (error) {
                 errorDiv.textContent = error.message;

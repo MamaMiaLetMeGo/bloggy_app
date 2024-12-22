@@ -21,10 +21,11 @@ use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 
+// Public routes (no auth required)
 Route::middleware('web')->group(function () {
-    // Include auth and admin routes
-    require __DIR__.'/auth.php';
-    require __DIR__.'/admin.php';
+    // Newsletter subscription for guests
+    Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribeEmail'])
+        ->name('newsletter.subscribe');
 
     // Static routes and public routes
     Route::get('/', function () {
@@ -40,9 +41,6 @@ Route::middleware('web')->group(function () {
     // Post routes (public)
     Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
 
-    // Newsletter routes (public)
-    Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribeEmail'])->name('newsletter.subscribe');
-
     // Post likes (no auth required)
     Route::post('/posts/{post}/like', [PostLikeController::class, 'toggle'])->name('posts.like');
 
@@ -55,9 +53,6 @@ Route::middleware('web')->group(function () {
     Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
     Route::post('/contact/submit', [ContactController::class, 'submit'])->name('contact.submit');
     Route::get('/contact/verify', [ContactController::class, 'verify'])->name('contact.verify');
-    Route::middleware(['web', 'auth'])->group(function () {
-        Route::post('/contact/test-email', [ContactController::class, 'testEmail'])->name('contact.test-email');
-    });
     Route::get('/categories', [CategoryViewController::class, 'index'])->name('categories.index');
     Route::get('/categories/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
 
@@ -71,36 +66,40 @@ Route::middleware('web')->group(function () {
     // Webhook routes
     Route::post('/webhooks/garmin', [LocationController::class, 'handleGarminWebhook'])->name('webhook.garmin');
 
-    // 2FA verification routes (without 2FA middleware)
-    Route::middleware(['auth'])->group(function () {
-        Route::prefix('2fa')->name('2fa.')->group(function () {
-            Route::get('/', [TwoFactorChallengeController::class, 'create'])->name('challenge');
-            Route::post('/', [TwoFactorChallengeController::class, 'store'])->name('verify');
-            Route::get('/recovery', [TwoFactorChallengeController::class, 'showRecoveryForm'])->name('recovery');
-            Route::post('/recovery', [TwoFactorChallengeController::class, 'recovery'])->name('recovery.store');
-        });
+    // Catch-all routes for posts and categories (must be last)
+    Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
+    Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
+});
 
-    });
+// Auth required routes
+Route::middleware(['web', 'auth'])->group(function () {
+    // Include auth and admin routes
+    require __DIR__.'/auth.php';
+    require __DIR__.'/admin.php';
 
     // Email verification routes
-    Route::middleware('auth')->group(function () {
-        Route::get('/email/verify', function () {
-            return view('auth.verify-email');
-        })->name('verification.notice');
+    Route::get('/email/verify', function () {
+        return view('auth.verify-email');
+    })->name('verification.notice');
 
-        Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-            $request->fulfill();
-            return redirect()->route('profile.edit')->with('status', 'Your email has been verified successfully!');
-        })->middleware(['signed'])->name('verification.verify');
+    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+        return redirect()->route('profile.edit')->with('status', 'Your email has been verified successfully!');
+    })->middleware(['signed'])->name('verification.verify');
 
-        Route::post('/email/verification-notification', function (Request $request) {
-            $request->user()->sendEmailVerificationNotification();
-            return back()->with('status', 'Verification link sent!');
-        })->middleware(['throttle:6,1'])->name('verification.send');
+    Route::post('/email/verification-notification', function (Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+        return back()->with('status', 'Verification link sent!');
+    })->middleware(['throttle:6,1'])->name('verification.send');
+
+    // Newsletter routes for authenticated users
+    Route::prefix('newsletter')->name('newsletter.')->group(function () {
+        Route::post('/preferences', [NewsletterController::class, 'subscribe'])->name('preferences');
+        Route::post('/unsubscribe', [NewsletterController::class, 'unsubscribe'])->name('unsubscribe');
     });
 
     // Protected routes that require email verification
-    Route::middleware(['auth', 'verified'])->group(function () {
+    Route::middleware('verified')->group(function () {
         // Profile routes
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -133,12 +132,6 @@ Route::middleware('web')->group(function () {
         // Existing protected routes
         Route::get('/welcome', [WelcomeController::class, 'newUser'])->name('welcome.new-user');
         Route::get('/welcome-back', [WelcomeBackController::class, 'index'])->name('welcome.back');
-        
-        // Newsletter routes
-        Route::prefix('newsletter')->name('newsletter.')->group(function () {
-            Route::post('/subscribe', [NewsletterController::class, 'subscribe'])->name('subscribe');
-            Route::post('/unsubscribe', [NewsletterController::class, 'unsubscribe'])->name('unsubscribe');
-        });
 
         // Profile routes
         Route::prefix('profile')->name('profile.')->group(function () {
@@ -175,12 +168,15 @@ Route::middleware('web')->group(function () {
                 Route::post('/{comment}/like', [CommentController::class, 'like'])->name('like');
             });
         });
+
+        // 2FA verification routes (without 2FA middleware)
+        Route::prefix('2fa')->name('2fa.')->group(function () {
+            Route::get('/', [TwoFactorChallengeController::class, 'create'])->name('challenge');
+            Route::post('/', [TwoFactorChallengeController::class, 'store'])->name('verify');
+            Route::get('/recovery', [TwoFactorChallengeController::class, 'showRecoveryForm'])->name('recovery');
+            Route::post('/recovery', [TwoFactorChallengeController::class, 'recovery'])->name('recovery.store');
+        });
     });
-
-    // Catch-all routes for posts and categories (must be last)
-    Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
-    Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
-
 });
 
 // Development only routes
