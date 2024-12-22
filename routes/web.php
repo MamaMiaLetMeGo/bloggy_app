@@ -54,7 +54,7 @@ Route::middleware('web')->group(function () {
     Route::post('/contact/submit', [ContactController::class, 'submit'])->name('contact.submit');
     Route::get('/contact/verify', [ContactController::class, 'verify'])->name('contact.verify');
     Route::get('/categories', [CategoryViewController::class, 'index'])->name('categories.index');
-    Route::get('/categories/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
+    Route::get('/categories/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.slug.show');
 
     // Location routes
     Route::prefix('location')->name('location.')->group(function () {
@@ -68,7 +68,7 @@ Route::middleware('web')->group(function () {
 
     // Catch-all routes for posts and categories (must be last)
     Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.category.show');
-    Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.slug.show');
+    Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
 });
 
 // Auth required routes
