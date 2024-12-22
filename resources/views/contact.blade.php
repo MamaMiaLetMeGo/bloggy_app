@@ -16,11 +16,9 @@
                 
                 <!-- Profile Info -->
                 <div class="p-8 md:w-2/3">
-                    <h1 class="text-3xl font-bold text-gray-900 mb-4">Let's Connect.</h1>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-4">Connect with Charles Gendron (I'm easy to reach).</h1>
                     <p class="text-lg text-gray-600 mb-6">
-                        I'm interested in hearing from anyone who stubbles upon my blog, especially recovering drunks. 
-                        Whether you have a question, suggestion, or just have something to say, 
-                        feel free to reach out.
+                        Feel free to reach out by chatting with my personal bot below.
                     </p>
                     
                     <!-- Social Links -->
