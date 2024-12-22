@@ -3,20 +3,23 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CategoryViewController;
-use App\Models\Post;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthorController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\Auth\TwoFactorAuthController;
+use App\Http\Controllers\PostLikeController;
+use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\WelcomeBackController;
-use App\Http\Controllers\TwoFactorAuthController;
-use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\SecurityController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\PostLikeController; // Add this line
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
+use App\Models\Post;
+use App\Http\Controllers\Auth\TwoFactorChallengeController;
 
 Route::middleware('web')->group(function () {
     // Include auth and admin routes
@@ -72,11 +75,48 @@ Route::middleware('web')->group(function () {
 
     });
 
-    // Protected routes that require 2FA
-    Route::middleware(['auth', 'two-factor'])->group(function () {
+    // Email verification routes
+    Route::middleware('auth')->group(function () {
+        Route::get('/email/verify', function () {
+            return view('auth.verify-email');
+        })->name('verification.notice');
+
+        Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+            $request->fulfill();
+            return redirect()->route('profile.edit')->with('status', 'Your email has been verified successfully!');
+        })->middleware(['signed'])->name('verification.verify');
+
+        Route::post('/email/verification-notification', function (Request $request) {
+            $request->user()->sendEmailVerificationNotification();
+            return back()->with('status', 'Verification link sent!');
+        })->middleware(['throttle:6,1'])->name('verification.send');
+    });
+
+    // Protected routes that require email verification
+    Route::middleware(['auth', 'verified'])->group(function () {
+        // Profile routes
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+        // Blog post routes
+        Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
+        Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+        Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
+        Route::patch('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
+        Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+
+        // Comment routes
+        Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('comments.store');
+        Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+
+        // Like routes
+        Route::post('/posts/{post}/like', [PostLikeController::class, 'store'])->name('likes.store');
+        Route::delete('/posts/{post}/like', [PostLikeController::class, 'destroy'])->name('likes.destroy');
+
         // Move admin routes inside this group
         Route::prefix('admin')->name('admin.')->group(function () {
-            Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+            Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
             // Update to use the correct namespace for CategoryController
             Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class);
             Route::resource('posts', \App\Http\Controllers\Admin\PostController::class);
@@ -128,8 +168,6 @@ Route::middleware('web')->group(function () {
                 Route::post('/{comment}/like', [CommentController::class, 'like'])->name('like');
             });
         });
-
-        
     });
 
     // Catch-all routes for posts and categories (must be last)
