@@ -15,7 +15,7 @@
         <!-- Validation Errors -->
         <x-auth-validation-errors class="mb-4" :errors="$errors" />
 
-        <form method="POST" action="{{ route('login') }}" class="space-y-6">
+        <form method="POST" action="{{ route('login.submit') }}" class="space-y-6">
             @csrf
 
             <!-- Email Address -->

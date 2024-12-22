@@ -112,7 +112,7 @@
                     @endif
                 @else
                     <div class="space-x-4">
-                        <x-nav-link :href="route('login')" :active="request()->routeIs('login')">
+                        <x-nav-link :href="route('login.form')" :active="request()->routeIs('login.form')">
                             {{ __('Login') }}
                         </x-nav-link>
                         <x-nav-link :href="route('register')" :active="request()->routeIs('register')">
@@ -198,7 +198,7 @@
         @else
             <div class="pt-4 pb-1 border-t border-gray-200">
                 <div class="space-y-1">
-                    <x-responsive-nav-link :href="route('login')" :active="request()->routeIs('login')">
+                    <x-responsive-nav-link :href="route('login.form')" :active="request()->routeIs('login.form')">
                         {{ __('Login') }}
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('register')" :active="request()->routeIs('register')">

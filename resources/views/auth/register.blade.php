@@ -72,7 +72,7 @@
             <!-- Login Link -->
             <div class="text-center mt-4">
                 <span class="text-sm text-gray-600">Already have an account?</span>
-                <a href="{{ route('login') }}" class="text-sm text-blue-600 hover:text-blue-800 ml-1">Sign in here</a>
+                <a href="{{ route('login.form') }}" class="text-sm text-blue-600 hover:text-blue-800 ml-1">Sign in here</a>
             </div>
         </form>
     </x-auth-card>

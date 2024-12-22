@@ -20,7 +20,7 @@ class LoginCodeController extends Controller
     public function show(Request $request)
     {
         if (!$request->email) {
-            return redirect()->route('login');
+            return redirect()->route('login.form');
         }
 
         return view('auth.login-code', [

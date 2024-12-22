@@ -110,7 +110,7 @@ class AuthenticatedSessionController extends Controller
     public function showCodeForm(Request $request)
     {
         if (!session('verification_code')) {
-            return redirect()->route('login');
+            return redirect()->route('login.form');
         }
 
         return view('auth.verify-code', [
