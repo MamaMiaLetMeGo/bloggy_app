@@ -41,7 +41,7 @@
                                 </div>
                             @endif
 
-                            <a href="{{ route('posts.show', ['category' => $posts->first()->categories->first()->slug, 'post' => $posts->first()->slug]) }}" 
+                            <a href="{{ route('posts.category.show', ['category' => $posts->first()->categories->first()->slug, 'post' => $posts->first()->slug]) }}" 
                                class="block group">
                                 <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">
                                     {{ $posts->first()->title }}
@@ -144,7 +144,7 @@
                             </div>
                         @endif
 
-                        <a href="{{ route('posts.show', ['category' => $post->categories->first()->slug, 'post' => $post->slug]) }}" 
+                        <a href="{{ route('posts.category.show', ['category' => $post->categories->first()->slug, 'post' => $post->slug]) }}" 
                            class="block group">
                             <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">
                                 {{ $post->title }}

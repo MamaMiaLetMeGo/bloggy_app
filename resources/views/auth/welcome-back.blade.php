@@ -41,7 +41,7 @@
                         <div class="space-y-4">
                             @foreach($newPosts as $post)
                                 <div class="p-4 border rounded-lg hover:bg-gray-50">
-                                    <a href="{{ route('posts.show', ['category' => $post->categories->first()->slug, 'post' => $post->slug]) }}" 
+                                    <a href="{{ route('posts.category.show', ['category' => $post->categories->first()->slug, 'post' => $post->slug]) }}" 
                                        class="block">
                                         <h3 class="font-medium">{{ $post->title }}</h3>
                                         <div class="text-sm text-gray-600">

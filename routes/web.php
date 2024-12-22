@@ -67,7 +67,7 @@ Route::middleware('web')->group(function () {
     Route::post('/webhooks/garmin', [LocationController::class, 'handleGarminWebhook'])->name('webhook.garmin');
 
     // Catch-all routes for posts and categories (must be last)
-    Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.show');
+    Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.category.show');
     Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
 });
 

@@ -128,7 +128,7 @@ class Post extends Model
         $category = $this->categories->first();
         $categorySlug = $category ? $category->slug : 'uncategorized';
         
-        return route('posts.show', [
+        return route('posts.category.show', [
             'category' => $categorySlug,
             'post' => $this->slug
         ]);

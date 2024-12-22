@@ -26,7 +26,7 @@ class NewPostNotification extends Notification
             ->subject("New {$this->post->categories->first()->name} Post: {$this->post->title}")
             ->line("A new post has been published in {$this->post->categories->first()->name}!")
             ->line($this->post->excerpt)
-            ->action('Read More', route('posts.show', [
+            ->action('Read More', route('posts.category.show', [
                 'category' => $this->post->categories->first()->slug,
                 'post' => $this->post->slug
             ]));

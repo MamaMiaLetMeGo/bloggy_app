@@ -138,7 +138,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap">{{ $post->published_date->format('Y-m-d') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <a href="{{ route('admin.posts.edit', $post) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
-                                    <a href="{{ route('posts.show', ['category' => $post->categories->first()->slug, 'post' => $post->slug]) }}" 
+                                    <a href="{{ route('posts.category.show', ['category' => $post->categories->first()->slug, 'post' => $post->slug]) }}" 
                                        class="text-green-600 hover:text-green-900"
                                        target="_blank">
                                         View

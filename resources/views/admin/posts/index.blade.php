@@ -146,7 +146,7 @@
                             <div class="flex items-center space-x-3">
                                 {{-- View/Preview Button --}}
                                 @if($post->categories->first())
-                                    <a href="{{ route('posts.show', ['category' => $post->categories->first()->slug, 'post' => $post->slug]) }}" 
+                                    <a href="{{ route('posts.category.show', ['category' => $post->categories->first()->slug, 'post' => $post->slug]) }}" 
                                        class="text-blue-600 hover:text-blue-900"
                                        target="_blank">
                                         View

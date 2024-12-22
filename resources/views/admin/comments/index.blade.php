@@ -102,7 +102,7 @@
                                 <div class="text-sm text-gray-500">{{ $comment->created_at->diffForHumans() }}</div>
                             </td>
                             <td class="px-6 py-4">
-                                <a href="{{ route('posts.show', $comment->post) }}" class="text-blue-600 hover:text-blue-900">
+                                <a href="{{ route('posts.category.show', ['category' => $comment->post->categories->first()->slug, 'post' => $comment->post->slug]) }}" class="text-blue-600 hover:text-blue-900">
                                     {{ Str::limit($comment->post->title, 30) }}
                                 </a>
                             </td>
