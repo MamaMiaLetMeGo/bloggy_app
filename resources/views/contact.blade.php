@@ -152,7 +152,7 @@
 
                             startChat() {
                                 this.chatStarted = true;
-                                this.addBotMessage("Hi! I'd love to help connect you with Charles. What's your name?");
+                                this.addBotMessage("Hi, my name is Charles, but most know me as Charlie. What's your name?");
                             },
 
                             async testEmail() {
@@ -230,16 +230,23 @@
                                     case 'name':
                                         this.userName = userMessage;
                                         this.currentStep = 'message';
-                                        this.addBotMessage(`Nice to meet you, ${this.userName}! Would you like to leave a message for Charles? (optional)`);
+                                        this.addBotMessage(`Thanks for sharing your name, ${this.userName}! Now, if you wish, please leave a detailed message... (optional)`);
                                         break;
 
                                     case 'message':
                                         this.userMessage = userMessage;
                                         this.currentStep = 'email';
-                                        this.addBotMessage("Great! What's your email address so Charles can get back to you?");
+                                        this.addBotMessage("Great! What's your email address so I can get back to you?");
                                         break;
 
                                     case 'email':
+                                        // Validate email format
+                                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                        if (!emailRegex.test(userMessage)) {
+                                            this.addBotMessage("That doesn't look like a valid email address. Please enter a valid email address so I can get back to you.");
+                                            return;
+                                        }
+
                                         this.userEmail = userMessage;
                                         this.currentStep = 'complete';
                                         this.submitContact();
@@ -262,24 +269,14 @@
                                         })
                                     });
 
-                                    const data = await response.json();
-
                                     if (!response.ok) {
-                                        if (data.type === 'duplicate') {
-                                            this.addBotMessage(data.message);
-                                            // Don't reset the chat for duplicate submissions
-                                            this.currentStep = 'complete';
-                                        } else {
-                                            throw new Error(data.message || 'Failed to submit contact form');
-                                        }
-                                        return;
+                                        throw new Error('Network response was not ok');
                                     }
 
-                                    this.addBotMessage("Thanks for reaching out! Charles will get back to you soon at " + this.userEmail);
+                                    this.addBotMessage("Thanks for reaching out! I will get back to you soon at " + this.userEmail);
                                 } catch (error) {
                                     console.error('Error:', error);
                                     this.addBotMessage("Sorry, there was a problem sending your message. Please try again later.");
-                                    this.currentStep = 'name';
                                 }
                             }
                         }
