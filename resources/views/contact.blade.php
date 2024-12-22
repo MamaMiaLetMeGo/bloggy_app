@@ -256,27 +256,44 @@
 
                             async submitContact() {
                                 try {
-                                    const response = await fetch('{{ route('contact.submit') }}', {
+                                    const formData = {
+                                        name: this.userName,
+                                        email: this.userEmail,
+                                        message: this.userMessage || 'No message provided'
+                                    };
+                                    
+                                    console.log('Submitting contact form:', formData);
+                                    
+                                    const response = await fetch('{{ url('/contact/submit') }}', {
                                         method: 'POST',
                                         headers: {
                                             'Content-Type': 'application/json',
+                                            'Accept': 'application/json',
                                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                                         },
-                                        body: JSON.stringify({
-                                            name: this.userName,
-                                            email: this.userEmail,
-                                            message: this.userMessage || 'No message provided'
-                                        })
+                                        body: JSON.stringify(formData)
                                     });
 
+                                    const data = await response.json();
+                                    console.log('Server response:', data);
+
                                     if (!response.ok) {
-                                        throw new Error('Network response was not ok');
+                                        if (data.errors) {
+                                            const errorMessages = Object.values(data.errors).flat().join('\n');
+                                            throw new Error(errorMessages);
+                                        }
+                                        throw new Error(data.message || 'Network response was not ok');
                                     }
 
-                                    this.addBotMessage("Thanks for reaching out! I will get back to you soon at " + this.userEmail);
+                                    this.addBotMessage(data.message || `Thanks for reaching out! I've sent a verification email to ${this.userEmail}. Please check your email and click the verification link to confirm your information. This helps prevent spam and ensures I can get back to you.
+
+Here's a summary of what you shared:
+• Name: ${this.userName}
+• Email: ${this.userEmail}
+${this.userMessage ? `• Message: ${this.userMessage}` : ''}`);
                                 } catch (error) {
-                                    console.error('Error:', error);
-                                    this.addBotMessage("Sorry, there was a problem sending your message. Please try again later.");
+                                    console.error('Form submission error:', error);
+                                    this.addBotMessage(error.message || "Sorry, there was a problem sending your message. Please try again later.");
                                 }
                             }
                         }
