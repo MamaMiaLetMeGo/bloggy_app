@@ -76,6 +76,19 @@
                                 class="px-6 py-3 bg-white text-blue-500 rounded-full font-semibold hover:bg-blue-50 transform transition hover:scale-105">
                             Start Chat
                         </button>
+                        
+                        @auth
+                            @if(auth()->user()->is_admin)
+                                <div class="flex justify-center mt-4">
+                                    <button @click="testEmail" 
+                                            class="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30"
+                                            :class="{ 'opacity-50 cursor-not-allowed': isTestingEmail }"
+                                            :disabled="isTestingEmail"
+                                            x-text="testEmailStatus || 'Test Email Configuration'">
+                                    </button>
+                                </div>
+                            @endif
+                        @endauth
                     </div>
 
                     <!-- Chat Messages -->
@@ -106,7 +119,7 @@
                     </div>
 
                     <!-- User Input -->
-                    <div class="flex space-x-4">
+                    <div class="mt-4 flex space-x-4">
                         <input type="text" 
                                x-model="userInput"
                                @keyup.enter="handleUserInput"
@@ -134,96 +147,106 @@
                             userMessage: '',
                             isTyping: false,
                             chatStarted: false,
+                            isTestingEmail: false,
+                            testEmailStatus: null,
 
                             startChat() {
                                 this.chatStarted = true;
-                                this.messages = [
-                                    { id: 1, type: 'bot', text: 'Hi, what is your name?' }
-                                ];
-                                this.scrollToBottom();
+                                this.addBotMessage("Hi! I'd love to help connect you with Charles. What's your name?");
                             },
-                            
-                            async handleUserInput() {
-                                if (!this.userInput.trim() || this.isTyping) return;
+
+                            async testEmail() {
+                                if (this.isTestingEmail) return;
                                 
-                                // Add user message
+                                this.isTestingEmail = true;
+                                this.testEmailStatus = 'Sending test email...';
+                                
+                                try {
+                                    const response = await fetch('{{ route('contact.test-email') }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                        }
+                                    });
+                                    
+                                    let data;
+                                    const contentType = response.headers.get('content-type');
+                                    if (contentType && contentType.includes('application/json')) {
+                                        data = await response.json();
+                                    } else {
+                                        throw new Error('Server returned non-JSON response');
+                                    }
+                                    
+                                    if (!response.ok) {
+                                        throw new Error(data.message || 'Failed to send test email');
+                                    }
+                                    
+                                    this.testEmailStatus = 'Test email sent!';
+                                    setTimeout(() => {
+                                        this.testEmailStatus = null;
+                                    }, 3000);
+                                } catch (error) {
+                                    console.error('Error sending test email:', error);
+                                    this.testEmailStatus = error.message;
+                                    setTimeout(() => {
+                                        this.testEmailStatus = null;
+                                    }, 3000);
+                                } finally {
+                                    this.isTestingEmail = false;
+                                }
+                            },
+
+                            addMessage(text, type = 'bot') {
                                 this.messages.push({
-                                    id: this.messages.length + 1,
-                                    type: 'user',
-                                    text: this.userInput
+                                    id: Date.now(),
+                                    text: text,
+                                    type: type
                                 });
+                                
+                                this.$nextTick(() => {
+                                    const container = document.getElementById('chat-messages');
+                                    container.scrollTop = container.scrollHeight;
+                                });
+                            },
 
-                                // Show typing indicator
+                            addBotMessage(text, delay = 1000) {
                                 this.isTyping = true;
-                                
-                                // Scroll to bottom
-                                this.scrollToBottom();
-                                
-                                // Simulate typing delay
-                                await new Promise(resolve => setTimeout(resolve, 1500));
+                                setTimeout(() => {
+                                    this.isTyping = false;
+                                    this.addMessage(text, 'bot');
+                                }, delay);
+                            },
 
-                                // Process based on current step
-                                switch(this.currentStep) {
+                            handleUserInput() {
+                                if (!this.userInput || this.isTyping) return;
+
+                                const userMessage = this.userInput.trim();
+                                this.addMessage(userMessage, 'user');
+                                this.userInput = '';
+
+                                switch (this.currentStep) {
                                     case 'name':
-                                        this.userName = this.userInput;
-                                        this.messages.push({
-                                            id: this.messages.length + 1,
-                                            type: 'bot',
-                                            text: `Thank you ${this.userName}, if you have a particular message for me, go ahead and write it now.`
-                                        });
+                                        this.userName = userMessage;
                                         this.currentStep = 'message';
+                                        this.addBotMessage(`Nice to meet you, ${this.userName}! Would you like to leave a message for Charles? (optional)`);
                                         break;
 
                                     case 'message':
-                                        this.userMessage = this.userInput;
-                                        this.messages.push({
-                                            id: this.messages.length + 1,
-                                            type: 'bot',
-                                            text: `Thanks for sharing. Now, what's your email address so I can respond to you?`
-                                        });
+                                        this.userMessage = userMessage;
                                         this.currentStep = 'email';
+                                        this.addBotMessage("Great! What's your email address so Charles can get back to you?");
                                         break;
-                                        
+
                                     case 'email':
-                                        // Email validation
-                                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                                        if (!emailRegex.test(this.userInput)) {
-                                            this.messages.push({
-                                                id: this.messages.length + 1,
-                                                type: 'bot',
-                                                text: `Sorry, that doesn't look like a valid email address. Please enter a valid email address so I can respond to you.`
-                                            });
-                                            break;
-                                        }
-                                        
-                                        this.userEmail = this.userInput;
-                                        this.messages.push({
-                                            id: this.messages.length + 1,
-                                            type: 'bot',
-                                            text: `Perfect, I have received your message and will get back to you within 24 hours.`
-                                        });
+                                        this.userEmail = userMessage;
                                         this.currentStep = 'complete';
-                                        
-                                        // Submit the contact information
-                                        await this.submitContact();
+                                        this.submitContact();
                                         break;
                                 }
-                                
-                                // Clear input and typing indicator
-                                this.userInput = '';
-                                this.isTyping = false;
-                                
-                                // Scroll to bottom
-                                this.scrollToBottom();
                             },
-                            
-                            scrollToBottom() {
-                                setTimeout(() => {
-                                    const chatMessages = document.getElementById('chat-messages');
-                                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                                }, 100);
-                            },
-                            
+
                             async submitContact() {
                                 try {
                                     const response = await fetch('{{ route('contact.submit') }}', {
@@ -235,15 +258,28 @@
                                         body: JSON.stringify({
                                             name: this.userName,
                                             email: this.userEmail,
-                                            message: this.userMessage
+                                            message: this.userMessage || 'No message provided'
                                         })
                                     });
-                                    
+
+                                    const data = await response.json();
+
                                     if (!response.ok) {
-                                        throw new Error('Failed to submit');
+                                        if (data.type === 'duplicate') {
+                                            this.addBotMessage(data.message);
+                                            // Don't reset the chat for duplicate submissions
+                                            this.currentStep = 'complete';
+                                        } else {
+                                            throw new Error(data.message || 'Failed to submit contact form');
+                                        }
+                                        return;
                                     }
+
+                                    this.addBotMessage("Thanks for reaching out! Charles will get back to you soon at " + this.userEmail);
                                 } catch (error) {
-                                    console.error('Error submitting contact:', error);
+                                    console.error('Error:', error);
+                                    this.addBotMessage("Sorry, there was a problem sending your message. Please try again later.");
+                                    this.currentStep = 'name';
                                 }
                             }
                         }
@@ -258,4 +294,5 @@
 @push('scripts')
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 @endpush
-@endsection 
+
+@endsection

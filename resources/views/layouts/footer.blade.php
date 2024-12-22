@@ -36,7 +36,7 @@
                 <ul class="mt-4 space-y-4">
                     <li>
                         <a href="{{ route('contact.show') }}" class="text-base text-gray-500 hover:text-gray-900">
-                            Contact Me
+                            Contact
                         </a>
                     </li>
                     <li class="flex space-x-4">
