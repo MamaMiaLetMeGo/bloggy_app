@@ -60,6 +60,17 @@ Route::middleware('web')->group(function () {
     Route::get('/categories', [CategoryViewController::class, 'index'])->name('categories.index');
     Route::get('/categories/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.slug.show');
 
+    // Profile routes
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+        Route::get('/profile/2fa', [ProfileController::class, 'showTwoFactor'])->name('profile.2fa.show');
+        Route::post('/profile/2fa', [ProfileController::class, 'enableTwoFactor'])->name('profile.2fa.enable');
+        Route::delete('/profile/2fa', [ProfileController::class, 'disableTwoFactor'])->name('profile.2fa.disable');
+        Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    });
+
     // Location routes
     Route::prefix('location')->name('location.')->group(function () {
         Route::get('/', [LocationController::class, 'show'])->name('show');

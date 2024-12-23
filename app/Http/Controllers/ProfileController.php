@@ -37,6 +37,60 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display the user's two-factor authentication settings.
+     */
+    public function showTwoFactor(Request $request): View
+    {
+        $user = $request->user();
+        $enabled = $user->two_factor_secret !== null;
+        $qrCode = '';
+        $secret = '';
+
+        if (!$enabled) {
+            $secret = $user->createTwoFactorSecret();
+            $qrCode = $user->getTwoFactorQrCodeSvg();
+        }
+
+        return view('profile.2fa', [
+            'enabled' => $enabled,
+            'qrCode' => $qrCode,
+            'secret' => $secret,
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * Enable two-factor authentication for the user.
+     */
+    public function enableTwoFactor(Request $request)
+    {
+        $request->validate([
+            'code' => ['required', 'string', 'size:6'],
+        ]);
+
+        $user = $request->user();
+
+        if ($user->verifyTwoFactorCode($request->code)) {
+            $user->enableTwoFactor();
+            return redirect()->route('profile.2fa.show')
+                ->with('status', 'Two-factor authentication has been enabled.');
+        }
+
+        return back()->withErrors(['code' => 'The provided code is invalid.']);
+    }
+
+    /**
+     * Disable two-factor authentication for the user.
+     */
+    public function disableTwoFactor(Request $request)
+    {
+        $request->user()->disableTwoFactor();
+        
+        return redirect()->route('profile.2fa.show')
+            ->with('status', 'Two-factor authentication has been disabled.');
+    }
+
+    /**
      * Update the user's profile information.
      */
     public function update(Request $request)

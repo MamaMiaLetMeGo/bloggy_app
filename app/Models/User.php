@@ -20,6 +20,11 @@ use App\Models\Comment;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Config;
+use PragmaRX\Google2FA\Google2FA;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -236,19 +241,77 @@ class User extends Authenticatable implements MustVerifyEmail
             : null;
     }
 
+    /**
+     * Create a new 2FA secret for the user.
+     *
+     * @return string
+     */
+    public function createTwoFactorSecret(): string
+    {
+        $google2fa = new Google2FA();
+        $secret = $google2fa->generateSecretKey();
+        $this->two_factor_secret = $secret;
+        $this->save();
+        
+        return $secret;
+    }
+
+    /**
+     * Get the QR code SVG for the 2FA secret.
+     *
+     * @return string
+     */
+    public function getTwoFactorQrCodeSvg(): string
+    {
+        $google2fa = new Google2FA();
+        
+        $qrCodeUrl = $google2fa->getQRCodeUrl(
+            config('app.name'),
+            $this->email,
+            $this->two_factor_secret
+        );
+
+        $renderer = new ImageRenderer(
+            new RendererStyle(200),
+            new SvgImageBackEnd()
+        );
+
+        $writer = new Writer($renderer);
+        return $writer->writeString($qrCodeUrl);
+    }
+
+    /**
+     * Verify a 2FA code.
+     *
+     * @param string $code
+     * @return bool
+     */
+    public function verifyTwoFactorCode(string $code): bool
+    {
+        $google2fa = new Google2FA();
+        return $google2fa->verifyKey($this->two_factor_secret, $code);
+    }
+
+    /**
+     * Enable 2FA for the user.
+     *
+     * @return void
+     */
     public function enableTwoFactor(): void
     {
         $this->two_factor_enabled = true;
-        $this->two_factor_confirmed_at = now();
         $this->save();
     }
 
+    /**
+     * Disable 2FA for the user.
+     *
+     * @return void
+     */
     public function disableTwoFactor(): void
     {
         $this->two_factor_enabled = false;
-        $this->two_factor_confirmed_at = null;
         $this->two_factor_secret = null;
-        $this->two_factor_recovery_codes = null;
         $this->save();
     }
 
