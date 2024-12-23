@@ -12,6 +12,14 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                    @auth
+                        @if(auth()->user()->is_admin)
+                            <x-nav-link href="{{ route('admin.categories.index') }}" :active="request()->routeIs('admin.categories.*')">
+                                {{ __('Categories') }}
+                            </x-nav-link>
+                        @endif
+                    @endauth
+
                     <x-nav-link href="/travel" :active="request()->is('travel*')">
                         {{ __('Travel') }}
                     </x-nav-link>
