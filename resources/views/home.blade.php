@@ -17,73 +17,86 @@
             <div class="flex flex-col md:flex-row md:items-center md:justify-between h-full">
                 <!-- Latest Post Card -->
                 <div class="w-full md:w-7/12 lg:w-1/2 pt-8 sm:pt-12 md:pt-0">
-                    <div class="bg-white/3 backdrop-blur-md rounded-2xl p-1 shadow-2xl">
-                        <div class="bg-white/40 rounded-xl p-6 sm:p-8 pb-8 sm:pb-10">
-                            @if($posts->first()->featured_image)
-                                <div class="relative h-48 -mt-12 -mx-4 mb-6 rounded-xl overflow-hidden shadow-lg">
-                                    <img src="{{ $posts->first()->featured_image_url }}" 
-                                         alt="{{ $posts->first()->title }}"
-                                         class="w-full h-full object-cover">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-                                </div>
-                            @endif
-                            @if($posts->first()->categories->isNotEmpty())
-                                <div class="flex items-center space-x-2 mb-4">
-                                    @foreach($posts->first()->categories as $category)
-                                        <a href="{{ route('categories.slug.show', $category) }}" 
-                                           class="text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1 rounded-full transition-colors">
-                                            {{ $category->name }}
-                                        </a>
-                                        @if(!$loop->last)
-                                            <span class="text-gray-300">&bull;</span>
-                                        @endif
-                                    @endforeach
-                                </div>
-                            @endif
-
-                            <a href="{{ route('posts.category.show', ['category' => $posts->first()->categories->first()->slug, 'post' => $posts->first()->slug]) }}" 
-                               class="block group">
-                                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">
-                                    {{ $posts->first()->title }}
-                                </h2>
-                            </a>
-
-                            @php
-                                $content = strip_tags($posts->first()->body_content);
-                                $sentences = array_slice(preg_split('/(?<=[.!?])\s+/', $content, -1, PREG_SPLIT_NO_EMPTY), 0, 3);
-                                $preview = implode(' ', $sentences);
-                            @endphp
-                            <p class="text-gray-700 mb-6 line-clamp-3">{{ $preview }}</p>
-
-                            <!-- Post Meta -->
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-700 gap-4">
-                                <div class="flex flex-wrap items-center gap-4">
-                                    @if($posts->first()->author->profile_photo_url)
-                                        <img src="{{ $posts->first()->author->profile_photo_url }}" 
-                                             alt="{{ $posts->first()->author->name }}" 
-                                             class="h-8 w-8 rounded-full ring-2 ring-white">
-                                    @endif
-                                    <span class="font-medium">{{ $posts->first()->author->name }}</span>
-                                    <span>{{ $posts->first()->published_date->format('M d, Y') }}</span>
-                                    <span>{{ $posts->first()->reading_time }} min read</span>
-                                </div>
-                                <div class="flex items-center space-x-3">
-                                    <div class="flex items-center">
-                                        <svg class="w-4 h-4 mr-1 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                                        </svg>
-                                        <span>{{ $posts->first()->likes_count }}</span>
+                    @if($posts->isNotEmpty())
+                        <div class="bg-white/3 backdrop-blur-md rounded-2xl p-1 shadow-2xl">
+                            <div class="bg-white/40 rounded-xl p-6 sm:p-8 pb-8 sm:pb-10">
+                                @if($posts->first()->featured_image)
+                                    <div class="relative h-48 -mt-12 -mx-4 mb-6 rounded-xl overflow-hidden shadow-lg">
+                                        <img src="{{ $posts->first()->featured_image_url }}" 
+                                             alt="{{ $posts->first()->title }}"
+                                             class="w-full h-full object-cover">
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                                     </div>
-                                    <div class="flex items-center">
-                                        <svg class="w-4 h-4 mr-1 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M21 15a2 2 0 0 1-2 2h-2.5a2 2 0 0 0-1.5.67l-1.5 1.67a2 2 0 0 1-3 0l-1.5-1.67A2 2 0 0 0 7.5 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/>
-                                        </svg>
-                                        <span>{{ $posts->first()->comments_count }}</span>
+                                @endif
+                                @if($posts->first()->categories->isNotEmpty())
+                                    <div class="flex items-center space-x-2 mb-4">
+                                        @foreach($posts->first()->categories as $category)
+                                            <a href="{{ route('categories.slug.show', $category) }}" 
+                                               class="text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1 rounded-full transition-colors">
+                                                {{ $category->name }}
+                                            </a>
+                                            @if(!$loop->last)
+                                                <span class="text-gray-300">&bull;</span>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                @endif
+
+                                <a href="{{ route('posts.category.show', ['category' => $posts->first()->categories->first()->slug, 'post' => $posts->first()->slug]) }}" 
+                                   class="block group">
+                                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">
+                                        {{ $posts->first()->title }}
+                                    </h2>
+                                </a>
+
+                                @php
+                                    $content = strip_tags($posts->first()->body_content);
+                                    $sentences = array_slice(preg_split('/(?<=[.!?])\s+/', $content, -1, PREG_SPLIT_NO_EMPTY), 0, 3);
+                                    $preview = implode(' ', $sentences);
+                                @endphp
+                                <p class="text-gray-700 mb-6 line-clamp-3">{{ $preview }}</p>
+
+                                <!-- Post Meta -->
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-700 gap-4">
+                                    <div class="flex flex-wrap items-center gap-4">
+                                        @if($posts->first()->author->profile_photo_url)
+                                            <img src="{{ $posts->first()->author->profile_photo_url }}" 
+                                                 alt="{{ $posts->first()->author->name }}" 
+                                                 class="h-8 w-8 rounded-full ring-2 ring-white">
+                                        @endif
+                                        <span class="font-medium">{{ $posts->first()->author->name }}</span>
+                                        <span>{{ $posts->first()->published_date->format('M d, Y') }}</span>
+                                        <span>{{ $posts->first()->reading_time }} min read</span>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                            </svg>
+                                            <span>{{ $posts->first()->likes_count }}</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M21 15a2 2 0 0 1-2 2h-2.5a2 2 0 0 0-1.5.67l-1.5 1.67a2 2 0 0 1-3 0l-1.5-1.67A2 2 0 0 0 7.5 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"/>
+                                            </svg>
+                                            <span>{{ $posts->first()->comments_count }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="bg-white/3 backdrop-blur-md rounded-2xl p-1 shadow-2xl">
+                            <div class="bg-white/40 rounded-xl p-6 sm:p-8 pb-8 sm:pb-10">
+                                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+                                    Welcome to Bloggy
+                                </h2>
+                                <p class="text-gray-700 mb-6">
+                                    No posts available yet. Check back soon for new content!
+                                </p>
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Newsletter Card -->

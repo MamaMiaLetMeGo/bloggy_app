@@ -12,13 +12,8 @@ class AdminUserSeeder extends Seeder
     {
         $adminUsers = [
             [
-                'name' => 'Primary Admin',
-                'email' => 'admin@example.com',
-                'password' => 'password123',
-            ],
-            [
-                'name' => 'Secondary Admin',
-                'email' => 'admin2@example.com',
+                'name' => 'Charles Gendron',
+                'email' => 'gitcommitcg@gmail.com',
                 'password' => 'password123',
             ],
         ];

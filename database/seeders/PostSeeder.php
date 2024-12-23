@@ -17,11 +17,11 @@ class PostSeeder extends Seeder
         $faker = Faker::create();
         
         // Get the admin user (assuming it exists from AdminUserSeeder)
-        $author = User::where('email', 'admin@example.com')->first();
+        $author = User::where('email', 'gitcommitcg@gmail.coom')->first();
         if (!$author) {
             $author = User::factory()->create([
-                'name' => 'Admin User',
-                'email' => 'admin@example.com',
+                'name' => 'Charles Gendron',
+                'email' => 'gitcommitcg@gmail.coom',
                 'password' => bcrypt('password'),
                 'is_admin' => true,
             ]);
