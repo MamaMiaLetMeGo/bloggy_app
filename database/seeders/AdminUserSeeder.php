@@ -15,6 +15,7 @@ class AdminUserSeeder extends Seeder
                 'name' => 'Charles Gendron',
                 'email' => 'gitcommitcg@gmail.com',
                 'password' => 'password123',
+                'is_admin' => true,
             ],
         ];
 
@@ -25,9 +26,13 @@ class AdminUserSeeder extends Seeder
                     'name' => $admin['name'],
                     'password' => Hash::make($admin['password']),
                     'email_verified_at' => now(),
+                    'is_admin' => true,
                 ]
             );
         }
+
+        // Delete the example admin users
+        User::whereIn('email', ['admin@example.com', 'admin2@example.com'])->delete();
 
         $this->command->info('Admin users created or updated successfully.');
     }
