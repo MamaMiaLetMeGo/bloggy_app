@@ -13,13 +13,24 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.3'
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
           
       - name: Copy .env
         run: php -r "file_exists('.env') || copy('.env.example', '.env');"
           
-      - name: Install Dependencies
+      - name: Install PHP Dependencies
         run: composer install --no-dev --optimize-autoloader
+        
+      - name: Install Node Dependencies
+        run: npm ci
+        
+      - name: Build Assets
+        run: npm run build
         
       - name: Generate key
         run: php artisan key:generate
@@ -37,6 +48,8 @@ jobs:
             cd /var/www/bloggy_app
             git pull origin production
             composer install --no-dev --optimize-autoloader
+            npm ci
+            npm run build
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
@@ -44,3 +57,4 @@ jobs:
             chown -R www-data:www-data .
             chmod -R 755 .
             chmod -R 777 storage bootstrap/cache
+            systemctl restart php8.3-fpm nginx

@@ -7,14 +7,8 @@
 
         <title>{{ config('app.name', 'Charles Gendron') }}</title>
 
-        <!-- Production Assets -->
-        @production
-            <link rel="stylesheet" href="{{ asset('build/assets/app-2juYq1Hy.css') }}">
-            <script src="{{ asset('build/assets/app-BjCBnTiP.js') }}" defer></script>
-        @else
-            @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @endproduction
-
+        <!-- Styles -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
         @stack('styles')
     </head>
     <body class="font-sans antialiased">
