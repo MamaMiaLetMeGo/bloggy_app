@@ -9,22 +9,29 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
 
     /**
-     * Display the user's profile.
+     * Display the user's profile form.
      */
-    public function show(Request $request): View
+    public function show(Request $request, ?User $user = null): View
     {
-        $user = auth()->user()->load(['posts' => function($query) {
-            $query->with('categories')
-                  ->latest()
+        // If no user is provided, show the authenticated user's profile
+        $user = $user ?? $request->user();
+        
+        // Load the user's posts
+        $user->load(['posts' => function ($query) {
+            $query->published()
+                  ->latest('published_date')
                   ->take(5);
         }]);
 
-        return view('profile.show', compact('user'));
+        return view('profile.show', [
+            'user' => $user,
+        ]);
     }
     /**
      * Display the user's profile form.

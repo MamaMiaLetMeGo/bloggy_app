@@ -60,6 +60,9 @@ Route::middleware('web')->group(function () {
     Route::get('/categories', [CategoryViewController::class, 'index'])->name('categories.index');
     Route::get('/categories/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.slug.show');
 
+    // Author routes
+    Route::get('/authors/{user}', [ProfileController::class, 'show'])->name('authors.show');
+
     // Profile routes
     Route::middleware(['auth'])->group(function () {
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');

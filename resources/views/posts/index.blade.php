@@ -28,14 +28,12 @@
                         </a>
                     </h2>
                     <div class="text-sm text-gray-500 mb-4 flex items-center">
-                        <a href="{{ $post->author->author_url }}" class="hover:text-blue-600 flex items-center">
-                            <img 
-                                src="{{ $post->author->profile_image_url }}" 
-                                alt="{{ $post->author->name }}" 
-                                class="w-6 h-6 rounded-full mr-2"
-                            >
-                            <span>{{ $post->author->name }}</span>
-                        </a>
+                        <span class="hover:text-blue-600 flex items-center">
+                            <a href="{{ $post->author->author_url }}" class="flex items-center hover:text-blue-600">
+                                <img src="{{ $post->author->profile_image_url }}" alt="{{ $post->author->name }}" class="h-6 w-6 rounded-full mr-2">
+                                {{ $post->author->name }}
+                            </a>
+                        </span>
                         @if($post->published_date)
                             <span class="mx-2">•</span>
                             <span>{{ $post->published_date->format('M d, Y') }}</span>

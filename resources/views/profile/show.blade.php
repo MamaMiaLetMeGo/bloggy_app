@@ -9,9 +9,11 @@
                     <h2 class="text-2xl font-bold text-gray-900">
                         {{ $user->name }}'s Profile
                     </h2>
-                    <a href="{{ route('profile.edit') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        {{ __('Edit Profile') }}
-                    </a>
+                    @if(auth()->id() === $user->id)
+                        <a href="{{ route('profile.edit') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            {{ __('Edit Profile') }}
+                        </a>
+                    @endif
                 </div>
 
                 <div class="space-y-6">
@@ -38,58 +40,39 @@
                                         <p class="text-sm font-medium text-gray-500">Name</p>
                                         <p class="mt-1">{{ $user->name }}</p>
                                     </div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-500">Email</p>
-                                        <p class="mt-1">{{ $user->email }}</p>
-                                        @if ($user->email_verified_at)
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-1">
-                                                Verified
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mt-1">
-                                                Not Verified
-                                            </span>
-                                        @endif
-                                    </div>
+                                    @if(auth()->id() === $user->id)
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-500">Email</p>
+                                            <p class="mt-1">{{ $user->email }}</p>
+                                        </div>
+                                    @endif
+                                    @if($user->bio)
+                                        <div class="col-span-2">
+                                            <p class="text-sm font-medium text-gray-500">Bio</p>
+                                            <p class="mt-1">{{ $user->bio }}</p>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Account Information -->
-                    <div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">Account Information</h3>
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Member Since</p>
-                                    <p class="mt-1">{{ $user->created_at->format('F j, Y') }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Last Updated</p>
-                                    <p class="mt-1">{{ $user->updated_at->format('F j, Y') }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Activity -->
+                    <!-- Recent Posts -->
                     @if($user->posts->count() > 0)
                         <div>
                             <h3 class="text-lg font-medium text-gray-900 mb-2">Recent Posts</h3>
                             <div class="bg-gray-50 p-4 rounded-lg">
                                 <div class="space-y-4">
-                                    @foreach($user->posts->take(5) as $post)
-                                        <div class="flex items-center justify-between">
-                                            <div>
-                                                <a href="{{ $post->url }}" class="text-gray-900 hover:text-blue-600">
+                                    @foreach($user->posts as $post)
+                                        <div class="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
+                                            <h4 class="text-lg font-medium">
+                                                <a href="{{ route('posts.show', $post) }}" class="text-blue-600 hover:text-blue-800">
                                                     {{ $post->title }}
                                                 </a>
-                                                <p class="text-sm text-gray-500">{{ $post->created_at->format('M j, Y') }}</p>
+                                            </h4>
+                                            <div class="text-sm text-gray-500 mt-1">
+                                                {{ $post->published_date->format('F j, Y') }}
                                             </div>
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $post->status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                                {{ ucfirst($post->status) }}
-                                            </span>
                                         </div>
                                     @endforeach
                                 </div>

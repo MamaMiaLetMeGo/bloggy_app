@@ -59,25 +59,19 @@
 
                 {{-- Author and Meta --}}
                 <div class="flex items-center space-x-4 mb-8">
-                    <a href="{{ $post->author->author_url }}" class="flex items-center text-gray-700 !no-underline hover:!underline group">
-                        <img 
-                            src="{{ $post->author->profile_image_url }}" 
-                            alt="{{ $post->author->name }}" 
-                            class="w-10 h-10 rounded-full mr-3"
-                        >
-                        <div>
-                            <div class="font-medium group-hover:text-blue-600">{{ $post->author->name }}</div>
-                            @if($post->published_date)
-                                <div class="text-sm text-gray-500 !no-underline">
-                                    @if($post->updated_at->gt($post->published_date->addMinutes(5)))
-                                        Updated on {{ $post->updated_at->format('F j, Y') }}
-                                    @else
-                                        Published on {{ $post->published_date->format('F j, Y') }}
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
-                    </a>
+                    <div class="flex items-center text-gray-700 !no-underline group">
+                        <a href="{{ $post->author->author_url }}" class="flex items-center hover:text-blue-600">
+                            <img src="{{ $post->author->profile_image_url }}" alt="{{ $post->author->name }}" class="h-10 w-10 rounded-full mr-3">
+                            <div>
+                                <div class="font-medium text-gray-800">{{ $post->author->name }}</div>
+                                @if($post->published_date)
+                                    <div class="text-sm text-gray-500">
+                                        Published {{ $post->published_date->format('M d, Y') }}
+                                    </div>
+                                @endif
+                            </div>
+                        </a>
+                    </div>
                     <div class="text-gray-500 text-sm flex items-center space-x-4">
                         <span>{{ $post->reading_time }} min read</span>
                         <a href="#comments" class="text-gray-500 hover:text-blue-600">
