@@ -22,10 +22,12 @@
                             <div class="bg-white/40 rounded-xl pt-12 px-6 sm:px-8 pb-8 sm:pb-10">
                                 @if($posts->first()->featured_image)
                                     <div class="relative h-48 mb-6 rounded-xl overflow-hidden shadow-lg">
-                                        <img src="{{ $posts->first()->featured_image_url }}" 
-                                             alt="{{ $posts->first()->title }}"
-                                             class="w-full h-full object-cover">
-                                        <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                                        <a href="{{ route('posts.category.show', ['category' => $posts->first()->categories->first()->slug, 'post' => $posts->first()->slug]) }}" class="block h-full">
+                                            <img src="{{ $posts->first()->featured_image_url }}" 
+                                                 alt="{{ $posts->first()->title }}"
+                                                 class="w-full h-full object-cover">
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                                        </a>
                                     </div>
                                 @endif
                                 @if($posts->first()->categories->isNotEmpty())
@@ -137,10 +139,12 @@
                     <div class="bg-white/40 rounded-xl p-6">
                         @if($post->featured_image)
                             <div class="relative h-48 -mt-12 -mx-4 mb-6 rounded-xl overflow-hidden shadow-lg">
-                                <img src="{{ $post->featured_image_url }}" 
-                                     alt="{{ $post->title }}"
-                                     class="w-full h-full object-cover">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                                <a href="{{ route('posts.category.show', ['category' => $post->categories->first()->slug, 'post' => $post->slug]) }}" class="block h-full">
+                                    <img src="{{ $post->featured_image_url }}" 
+                                         alt="{{ $post->title }}"
+                                         class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                                </a>
                             </div>
                         @endif
                         @if($post->categories->isNotEmpty())
