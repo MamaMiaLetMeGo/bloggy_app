@@ -18,7 +18,9 @@ Route::middleware('guest')->group(function () {
     Route::post('register', [RegisteredUserController::class, 'store'])->middleware('throttle:registration');
     
     // Login routes
-    Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login.form');
+    Route::get('login', [AuthenticatedSessionController::class, 'create'])
+        ->name('login.form')
+        ->middleware('guest');
     Route::post('login', [AuthenticatedSessionController::class, 'store'])
         ->middleware(['throttle:login', IPBlocklist::class])
         ->name('login.submit');
