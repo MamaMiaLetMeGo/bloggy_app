@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>CharlesGendron.com - Online Page, Blog, and Writings</title>
+        <title>@yield('title', 'CharlesGendron.com - Online Page, Blog, and Writings')</title>
 
         <!-- Styles -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])

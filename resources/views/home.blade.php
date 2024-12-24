@@ -106,7 +106,7 @@
                     <div class="bg-white/3 backdrop-blur-md rounded-2xl p-1 shadow-2xl">
                         <div class="bg-white/40 rounded-xl p-6">
                             <h3 class="text-xl font-bold text-gray-900 mb-2">Never Miss a Post</h3>
-                            <p class="text-gray-700 text-sm mb-4">Join our newsletter and stay updated with the latest content</p>
+                            <p class="text-gray-700 text-sm mb-4">Sign up for email alerts when a new post is published.</p>
                             
                             <form id="newsletter-form" method="POST" action="{{ route('newsletter.subscribe') }}" class="space-y-3">
                                 @csrf

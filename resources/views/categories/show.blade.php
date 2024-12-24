@@ -1,4 +1,7 @@
 @extends('layouts.app')
+
+@section('title', 'CharlesGendron.com - ' . $category->name)
+
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <!-- Admin Actions -->

@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'CharlesGendron.com - ' . $post->title)
+
 @section('meta')
 <meta property="og:title" content="{{ $post->title }}" />
 <meta property="og:description" content="{{ $post->excerpt }}" />
