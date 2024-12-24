@@ -23,7 +23,7 @@
                     
                     <!-- Social Links -->
                     <div class="flex space-x-6">
-                        <a href="https://twitter.com/yourusername" 
+                        <a href="https://x.com/charlesgendronn" 
                            class="text-gray-400 hover:text-blue-500 transition-colors duration-300"
                            target="_blank"
                         >
@@ -33,7 +33,7 @@
                             </svg>
                         </a>
 
-                        <a href="https://instagram.com/yourusername" 
+                        <a href="https://www.instagram.com/charlesgendronn/" 
                            class="text-gray-400 hover:text-pink-500 transition-colors duration-300"
                            target="_blank"
                         >
