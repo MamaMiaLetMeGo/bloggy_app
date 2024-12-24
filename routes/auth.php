@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Middleware\IPBlocklist;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +49,14 @@ Route::middleware('auth')->group(function () {
     Route::get('verify-email/{id}/{hash}', [EmailVerificationNotificationController::class, '__invoke'])
         ->middleware(['signed', 'throttle:6,1'])
         ->name('verification.verify');
+
+    // Two Factor Authentication
+    Route::get('2fa/challenge', [TwoFactorChallengeController::class, 'create'])
+        ->name('2fa.challenge');
+    Route::post('2fa/challenge', [TwoFactorChallengeController::class, 'store']);
+    Route::get('2fa/recovery', [TwoFactorChallengeController::class, 'showRecoveryForm'])
+        ->name('2fa.recovery');
+    Route::post('2fa/recovery', [TwoFactorChallengeController::class, 'recovery']);
 
     Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
         ->middleware('throttle:6,1')
