@@ -25,6 +25,7 @@ use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -49,6 +50,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'profile_image',       // Add if you want author images
         'social_links',
         'is_admin',
+        'slug'
     ];
 
     /**
@@ -75,6 +77,23 @@ class User extends Authenticatable implements MustVerifyEmail
         'two_factor_confirmed_at' => 'datetime',
         'login_code_expires_at' => 'datetime',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($user) {
+            if (!$user->slug) {
+                $user->slug = Str::slug($user->name);
+            }
+        });
+        
+        static::updating(function ($user) {
+            if ($user->isDirty('name') && !$user->isDirty('slug')) {
+                $user->slug = Str::slug($user->name);
+            }
+        });
+    }
 
     /**
      * Get all posts authored by the user.
@@ -343,5 +362,10 @@ class User extends Authenticatable implements MustVerifyEmail
         } else {
             $this->notify(new VerifyEmailNotification);
         }
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'slug';
     }
 }
