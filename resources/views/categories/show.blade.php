@@ -101,6 +101,12 @@
     <div class="flex flex-col lg:flex-row lg:space-x-8">
         <!-- Main Content -->
         <div class="lg:w-3/4">
+            <!-- Category Description -->
+            @if($category->description)
+                <div class="mb-8 prose max-w-none tinymce-content">
+                    {!! $category->description !!}
+                </div>
+            @endif
             <!-- Posts Section Header with Filter -->
             <div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
                 <h2 class="text-xl font-semibold text-gray-900">Latest Posts</h2>
