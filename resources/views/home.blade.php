@@ -12,16 +12,16 @@
             <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30"></div>
         </div>
 
-        <div class="relative h-full container mx-auto px-4">
+        <div class="relative h-full container mx-auto px-4 pt-8 sm:pt-12 md:pt-0">
             <!-- Cards Container -->
             <div class="flex flex-col md:flex-row md:items-center md:justify-between h-full">
                 <!-- Latest Post Card -->
-                <div class="w-full md:w-7/12 lg:w-1/2 pt-8 sm:pt-12 md:pt-0">
+                <div class="w-full md:w-7/12 lg:w-1/2">
                     @if($posts->isNotEmpty())
                         <div class="bg-white/3 backdrop-blur-md rounded-2xl p-1 shadow-2xl">
-                            <div class="bg-white/40 rounded-xl p-6 sm:p-8 pb-8 sm:pb-10">
+                            <div class="bg-white/40 rounded-xl pt-12 px-6 sm:px-8 pb-8 sm:pb-10">
                                 @if($posts->first()->featured_image)
-                                    <div class="relative h-48 -mt-12 -mx-4 mb-6 rounded-xl overflow-hidden shadow-lg">
+                                    <div class="relative h-48 mb-6 rounded-xl overflow-hidden shadow-lg">
                                         <img src="{{ $posts->first()->featured_image_url }}" 
                                              alt="{{ $posts->first()->title }}"
                                              class="w-full h-full object-cover">
@@ -87,7 +87,7 @@
                         </div>
                     @else
                         <div class="bg-white/3 backdrop-blur-md rounded-2xl p-1 shadow-2xl">
-                            <div class="bg-white/40 rounded-xl p-6 sm:p-8 pb-8 sm:pb-10">
+                            <div class="bg-white/40 rounded-xl pt-12 px-6 sm:px-8 pb-8 sm:pb-10">
                                 <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
                                     Welcome to Bloggy
                                 </h2>
