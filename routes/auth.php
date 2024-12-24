@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Middleware\IPBlocklist;
 use Illuminate\Support\Facades\Route;
 
@@ -30,7 +31,7 @@ Route::middleware('guest')->group(function () {
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
         ->name('password.reset');
 
-    Route::post('reset-password', [NewPasswordController::class, 'store'])
+    Route::match(['POST', 'PUT'], 'reset-password', [NewPasswordController::class, 'store'])
         ->name('password.update');
 
     Route::get('/login/code', [AuthenticatedSessionController::class, 'showCodeForm'])
@@ -57,7 +58,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
 
-    Route::put('password', [NewPasswordController::class, 'update'])->name('password.update.profile');
+    Route::put('password', [PasswordController::class, 'update'])->name('password.update.profile');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
