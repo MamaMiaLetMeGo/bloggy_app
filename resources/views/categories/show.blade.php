@@ -7,73 +7,100 @@
     <!-- Admin Actions -->
     @auth
         @if(auth()->user()->is_admin)
-            <div class="mb-6 flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Categories</h1>
-                </div>
-                <a href="{{ route('admin.categories.create') }}" 
-                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    New Category
+            <div class="mb-6 flex space-x-4">
+                <a href="{{ route('admin.categories.edit', $category) }}" 
+                   class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:ring ring-blue-300 disabled:opacity-25 transition">
+                    Edit Category
                 </a>
+                <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-800 focus:outline-none focus:border-red-800 focus:ring ring-red-300 disabled:opacity-25 transition"
+                            onclick="return confirm('Are you sure you want to delete this category?')">
+                        Delete Category
+                    </button>
+                </form>
             </div>
         @endif
     @endauth
 
-    <!-- Category Header -->
+    <!-- Category Header with Latest Post Overlay -->
+    <div class="relative h-[500px] mb-8 rounded-2xl overflow-hidden">
+        @if($category->image)
+            <img src="{{ Storage::disk('public')->url($category->image) }}" 
+                 alt="{{ $category->name }}" 
+                 class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30"></div>
+        @endif
+
+        <!-- Latest Post Overlay -->
+        <div class="absolute inset-0 flex items-center justify-center">
+            <div class="max-w-2xl mx-auto px-4">
+                @if($posts->isNotEmpty())
+                    <div class="bg-white/3 backdrop-blur-md rounded-2xl p-1 shadow-2xl">
+                        <div class="bg-white/40 rounded-xl pt-12 px-6 sm:px-8 pb-8 sm:pb-10">
+                            @if($posts->first()->featured_image)
+                                <div class="relative h-48 mb-6 rounded-xl overflow-hidden shadow-lg">
+                                    <a href="{{ route('posts.category.show', ['category' => $category->slug, 'post' => $posts->first()->slug]) }}" class="block h-full">
+                                        <img src="{{ $posts->first()->featured_image_url }}" 
+                                             alt="{{ $posts->first()->title }}"
+                                             class="w-full h-full object-cover">
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                                    </a>
+                                </div>
+                            @endif
+                            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+                                <a href="{{ route('posts.category.show', ['category' => $category->slug, 'post' => $posts->first()->slug]) }}" 
+                                   class="hover:text-blue-600 transition-colors duration-200">
+                                    {{ $posts->first()->title }}
+                                </a>
+                            </h2>
+                            <p class="text-gray-600 mb-6 line-clamp-2">{{ Str::limit(strip_tags($posts->first()->body_content), 150) }}</p>
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm text-gray-700 gap-4">
+                                <div class="flex flex-wrap items-center gap-4">
+                                    @if($posts->first()->author->profile_photo_url)
+                                        <img src="{{ $posts->first()->author->profile_photo_url }}" 
+                                             alt="{{ $posts->first()->author->name }}" 
+                                             class="w-8 h-8 rounded-full">
+                                    @endif
+                                    <span>By {{ $posts->first()->author->name }}</span>
+                                    <span class="mx-3">{{ $posts->first()->published_date->format('M j, Y') }}</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="flex items-center gap-1">
+                                        <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>{{ $posts->first()->likes_count }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                                        </svg>
+                                        <span>{{ $posts->first()->comments_count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="bg-white/3 backdrop-blur-md rounded-2xl p-1 shadow-2xl">
+                        <div class="bg-white/40 rounded-xl pt-12 px-6 sm:px-8 pb-8 sm:pb-10">
+                            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+                                No posts yet in {{ $category->name }}
+                            </h2>
+                            <p class="text-gray-600">Check back soon for new content!</p>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content and Sidebar -->
     <div class="flex flex-col lg:flex-row lg:space-x-8">
         <!-- Main Content -->
         <div class="lg:w-3/4">
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
-                <div class="p-6">
-                    {{-- Breadcrumb --}}
-                    <nav class="flex mb-6" aria-label="Breadcrumb">
-                        <ol style="list-style: none;" class="flex items-center space-x-1 md:space-x-3 m-0 p-0">
-                            <li class="inline-flex items-center">
-                                <a href="{{ route('home') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600">
-                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-                                    </svg>
-                                    Home
-                                </a>
-                            </li>
-                            <li aria-hidden="true">
-                                <div class="flex items-center">
-                                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">{{ $category->name }}</span>
-                                </div>
-                            </li>
-                        </ol>
-                    </nav>
-
-                    {{-- Title and Actions --}}
-                    <div class="flex justify-between items-start mb-6">
-                        <h1 class="text-3xl font-bold">{{ $category->name }}</h1>
-                        <div class="text-sm text-gray-500">
-                            {{ $posts->total() }} {{ Str::plural('post', $posts->total()) }} in this category
-                        </div>
-                    </div>
-
-                    @if($category->image)
-                        <div class="mb-6">
-                            <img src="{{ Storage::disk('public')->url($category->image) }}" 
-                                 alt="{{ $category->name }}" 
-                                 class="w-full h-48 object-cover rounded-lg">
-                        </div>
-                    @endif
-
-                    @if($category->description)
-                        <div class="tinymce-content prose prose-lg prose-blue max-w-none">
-                            {!! $category->description !!}
-                        </div>
-                    @endif
-                </div>
-            </div>
-
             <!-- Posts Section Header with Filter -->
             <div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
                 <h2 class="text-xl font-semibold text-gray-900">Latest Posts</h2>
@@ -96,8 +123,9 @@
                 </div>
             </div>
 
+            <!-- Posts Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @forelse ($posts as $post)
+                @forelse ($posts->skip(1) as $post)
                     <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
                         <a href="{{ $post->url }}" class="block">
                             @if($post->featured_image)
@@ -114,8 +142,7 @@
                                          alt="{{ $post->author->name }}"
                                          class="w-8 h-8 rounded-full mr-3">
                                     <div>
-                                        <div class="font-medium text-gray-900">{{ $post->author->name }}</div>
-                                        <div class="text-sm text-gray-500">{{ $post->published_date->format('M d, Y') }}</div>
+                                        <div class="font-medium text-gray-900">By {{ $post->author->name }} <span class="mx-3">{{ $post->published_date->format('M j, Y') }}</span></div>
                                     </div>
                                 </div>
 
@@ -127,13 +154,13 @@
                                         <span>{{ $post->reading_time }} min read</span>
                                     </div>
                                     <div class="flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 mr-1 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                                         </svg>
                                         <span>{{ $post->likes_count }}</span>
                                     </div>
                                     <div class="flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
                                         </svg>
                                         <span>{{ $post->comments()->count() }}</span>

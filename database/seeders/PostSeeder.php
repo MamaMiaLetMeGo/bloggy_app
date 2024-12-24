@@ -17,76 +17,58 @@ class PostSeeder extends Seeder
         $faker = Faker::create();
         
         // Get the admin user (assuming it exists from AdminUserSeeder)
-        $author = User::where('email', 'gitcommitcg@gmail.coom')->first();
+        $author = User::where('email', 'gitcommitcg@gmail.com')->first();
         if (!$author) {
-            $author = User::factory()->create([
-                'name' => 'Charles Gendron',
-                'email' => 'gitcommitcg@gmail.coom',
-                'password' => bcrypt('password'),
-                'is_admin' => true,
-            ]);
+            throw new \Exception('Admin user not found. Please run AdminUserSeeder first.');
         }
 
         // Get all categories
         $categories = Category::all();
         
-        // Create 10 posts
-        for ($i = 0; $i < 10; $i++) {
-            // Generate 4 sections with headers and content
-            $sections = [];
-            for ($j = 0; $j < 4; $j++) {
-                $sections[] = [
-                    'header' => $faker->unique()->sentence(),
-                    'content' => $faker->paragraphs(5, true),
-                ];
-            }
+        // Create 10 posts per category
+        foreach ($categories as $category) {
+            for ($i = 0; $i < 10; $i++) {
+                // Generate 4 sections with headers and content
+                $sections = [];
+                for ($j = 0; $j < 4; $j++) {
+                    $sections[] = [
+                        'header' => $faker->unique()->sentence(),
+                        'content' => $faker->paragraphs(5, true),
+                    ];
+                }
 
-            // Combine sections into body content with h1 tags
-            $bodyContent = '';
-            foreach ($sections as $section) {
-                $bodyContent .= "<h1>{$section['header']}</h1>\n\n";
-                $bodyContent .= $section['content'] . "\n\n";
-            }
+                // Combine sections into body content with h1 tags
+                $bodyContent = '';
+                foreach ($sections as $section) {
+                    $bodyContent .= "<h1>{$section['header']}</h1>\n\n";
+                    $bodyContent .= $section['content'] . "\n\n";
+                }
 
-            // Add extra paragraphs to reach approximately 1000 words
-            while (str_word_count(strip_tags($bodyContent)) < 1000) {
-                $bodyContent .= "\n\n" . $faker->paragraph(rand(4, 8));
-            }
+                // Add extra paragraphs to reach approximately 1000 words
+                $extraParagraphs = $faker->paragraphs(3, true);
+                $bodyContent .= $extraParagraphs;
 
-            // Create the post
-            $post = Post::create([
-                'title' => $faker->unique()->sentence(),
-                'slug' => Str::slug($faker->unique()->sentence()),
-                'body_content' => $bodyContent,
-                'reading_time' => rand(3, 15),
-                'status' => 'published',
-                'published_date' => Carbon::now()->subDays(rand(1, 30)),
-                'author_id' => $author->id,
-            ]);
-
-            // Attach random categories (1-3)
-            $post->categories()->attach(
-                $categories->random(rand(1, 3))->pluck('id')->toArray()
-            );
-
-            // Add random number of likes (0-50)
-            $numLikes = rand(0, 50);
-            for ($k = 0; $k < $numLikes; $k++) {
-                $post->likes()->create([
-                    'ip_address' => $faker->ipv4
+                // Create post
+                $title = $faker->unique()->sentence();
+                $post = Post::create([
+                    'title' => $title,
+                    'slug' => Str::slug($title),
+                    'body_content' => $bodyContent,
+                    'featured_image' => null, // You might want to add real images later
+                    'status' => 'published',
+                    'published_date' => Carbon::now()->subDays(rand(1, 30)),
+                    'author_id' => $author->id,
+                    'breadcrumb' => $category->name,
                 ]);
-            }
 
-            // Add random number of comments (0-20)
-            $numComments = rand(0, 20);
-            for ($k = 0; $k < $numComments; $k++) {
-                $post->comments()->create([
-                    'author_name' => $faker->name,
-                    'author_email' => $faker->email,
-                    'content' => $faker->paragraph(rand(1, 3)),
-                    'is_approved' => true,
-                    'created_at' => Carbon::now()->subDays(rand(0, 30))->addHours(rand(1, 24))
-                ]);
+                // Attach the current category
+                $post->categories()->attach($category->id);
+
+                // Randomly attach 0-2 additional categories
+                $otherCategories = $categories->where('id', '!=', $category->id)->random(rand(0, 2));
+                foreach ($otherCategories as $otherCategory) {
+                    $post->categories()->attach($otherCategory->id);
+                }
             }
         }
     }
