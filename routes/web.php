@@ -14,7 +14,6 @@ use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\WelcomeBackController;
 use App\Http\Controllers\SecurityController;
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
@@ -83,10 +82,17 @@ Route::middleware('web')->group(function () {
 
     // Webhook routes
     Route::post('/webhooks/garmin', [LocationController::class, 'handleGarminWebhook'])->name('webhook.garmin');
+});
 
-    // Catch-all routes for posts and categories (must be last)
-    Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])->name('posts.category.show');
-    Route::get('/{category:slug}', [CategoryViewController::class, 'show'])->name('categories.show');
+// Catch-all routes for posts and categories (must be last and exclude admin routes)
+Route::middleware('web')->group(function () {
+    Route::get('/{category:slug}/{post:slug}', [PostController::class, 'show'])
+        ->name('posts.category.show')
+        ->where('category', '^(?!admin|api).*$'); // Exclude admin and api routes
+
+    Route::get('/{category:slug}', [CategoryViewController::class, 'show'])
+        ->name('categories.show')
+        ->where('category', '^(?!admin|api).*$'); // Exclude admin and api routes
 });
 
 // Development only routes

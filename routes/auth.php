@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
     Route::post('register', [RegisteredUserController::class, 'store'])->middleware('throttle:registration');
+    
+    // Login routes
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login.form');
     Route::post('login', [AuthenticatedSessionController::class, 'store'])
         ->middleware(['throttle:login', IPBlocklist::class])
@@ -51,10 +53,9 @@ Route::middleware('auth')->group(function () {
         ->name('verification.send');
 
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
-        ->name('password.confirm.show');
+        ->name('password.confirm');
 
-    Route::post('confirm-password', [ConfirmablePasswordController::class, 'store'])
-        ->name('password.confirm.submit');
+    Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
 
     Route::put('password', [NewPasswordController::class, 'update'])->name('password.update.profile');
 
